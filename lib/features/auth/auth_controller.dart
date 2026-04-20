@@ -7,6 +7,8 @@ class AuthController extends GetxController {
   var isLoading = false.obs;
   var errorMessage = ''.obs;
 
+  final String userBoxName = 'userBox';
+
   // - Fungsi Register -
   Future<bool> register(
     String name,
@@ -51,7 +53,7 @@ class AuthController extends GetxController {
   Future<bool> login(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
       errorMessage.value = 'Email dan Password harus diisi!';
-      return false
+      return false;
     }
 
     isLoading.value = true;
