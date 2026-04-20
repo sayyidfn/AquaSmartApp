@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'routes/app_pages.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,18 +19,8 @@ class AquaSmartApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'AquaSmart',
       debugShowCheckedModeBanner: false,
-      home: const Scaffold(
-        body: Center(
-          child: Text(
-            'Mesin AquaSmart Berjalan Lancar! 🐟\nMenunggu UI Figma Selesai...',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
+      initialRoute: AppPages.INITIAL, // rute awal
+      getPages: AppPages.routes, // daftar rute
     );
   }
 }
