@@ -7,6 +7,18 @@ class AuthController extends GetxController {
   var isLoading = false.obs;
   var errorMessage = ''.obs;
 
+  var isPasswordHidden = true.obs;
+  var isConfirmPasswordHidden = true.obs;
+
+  // fungsi untuk toggle ikon mata
+  void togglePasswordVisibility() {
+    isPasswordHidden.value = !isPasswordHidden.value;
+  }
+
+  void toggleConfirmPasswordVisibility() {
+    isConfirmPasswordHidden.value = !isConfirmPasswordHidden.value;
+  }
+
   final String userBoxName = 'userBox';
 
   // - Fungsi Register -

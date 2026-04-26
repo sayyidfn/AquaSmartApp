@@ -8,6 +8,8 @@ void main() async {
 
   await Hive.initFlutter();
 
+  await Hive.openBox('userBox');
+
   runApp(const AquaSmartApp());
 }
 
