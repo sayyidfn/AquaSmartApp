@@ -46,7 +46,7 @@ dependencies:
 
   # --- SENSOR & HARDWARE ---
   sensors_plus: ^5.0.1 # Untuk Accelerometer & Gyroscope
-  local_auth: ^2.2.0 # Untuk Login Biometrik
+  local_auth: ^3.0.1 # Untuk Login Biometrik
 
   # --- LOCATION BASED SERVICES ---
   geolocator: ^11.0.0
@@ -56,6 +56,8 @@ dependencies:
   google_fonts: ^6.2.1 # Untuk tipografi yang rapi (misal: Poppins)
   intl: ^0.19.0 # Untuk format tanggal dan mata uang
   flutter_svg: ^2.2.4
+  google_generative_ai: ^0.4.7
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:

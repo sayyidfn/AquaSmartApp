@@ -21,7 +21,7 @@ class AquaSmartApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'AquaSmart',
       debugShowCheckedModeBanner: false,
-      initialRoute: AppPages.INITIAL, // rute awal
+      initialRoute: AppPages.initial, // rute awal
       getPages: AppPages.routes, // daftar rute
     );
   }

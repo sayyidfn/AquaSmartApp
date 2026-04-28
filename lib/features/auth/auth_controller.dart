@@ -1,16 +1,19 @@
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:local_auth/local_auth.dart';
 import '../../core/utils/storage_util.dart';
 
 class AuthController extends GetxController {
-  // state untuk memantau loading dan pesan error
   var isLoading = false.obs;
   var errorMessage = ''.obs;
 
   var isPasswordHidden = true.obs;
   var isConfirmPasswordHidden = true.obs;
 
-  // fungsi untuk toggle ikon mata
+  final String userBoxName = 'userBox';
+
+  final LocalAuthentication auth = LocalAuthentication();
+
   void togglePasswordVisibility() {
     isPasswordHidden.value = !isPasswordHidden.value;
   }
@@ -19,9 +22,6 @@ class AuthController extends GetxController {
     isConfirmPasswordHidden.value = !isConfirmPasswordHidden.value;
   }
 
-  final String userBoxName = 'userBox';
-
-  // - Fungsi Register -
   Future<bool> register(
     String name,
     String nim,
@@ -37,13 +37,11 @@ class AuthController extends GetxController {
     try {
       var box = Hive.box(userBoxName);
 
-      //cek apakah email sudah terdaftar
       if (box.containsKey(email)) {
         errorMessage.value = 'Email sudah terdaftar!';
         return false;
       }
 
-      // simpan data pendaftaran ke Hive (Email sebagai Primary key)
       await box.put(email, {
         'name': name,
         'nim': nim,
@@ -61,7 +59,7 @@ class AuthController extends GetxController {
     }
   }
 
-  // - Fungsi Login -
+  // - Fungsi Login Standar -
   Future<bool> login(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
       errorMessage.value = 'Email dan Password harus diisi!';
@@ -71,14 +69,17 @@ class AuthController extends GetxController {
     isLoading.value = true;
     try {
       var box = Hive.box(userBoxName);
-
-      // ambil data dari Hive berdasarkan email
       var userData = box.get(email);
 
-      // cocokan password
       if (userData != null && userData['password'] == password) {
-        // jika cocok, panggil fungsi shared preferences untuk menyimpan sesi
-        await StorageUtil.saveLoginSession(userData['nim'], userData['name']);
+        await StorageUtil.saveLoginSession(
+          email,
+          userData['nim'],
+          userData['name'],
+        );
+
+        box.put('last_logged_in_email', email);
+
         errorMessage.value = '';
         return true;
       } else {
@@ -90,6 +91,52 @@ class AuthController extends GetxController {
       return false;
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  bool isBiometricEnabled() {
+    var box = Hive.box(userBoxName);
+    return box.get('use_biometric', defaultValue: false);
+  }
+  Future<bool> loginWithBiometric() async {
+    try {
+      var box = Hive.box(userBoxName);
+      String? lastEmail = box.get('last_logged_in_email');
+
+      if (lastEmail == null || lastEmail.isEmpty) {
+        errorMessage.value =
+            'Data login sebelumnya tidak ditemukan. Silakan login manual.';
+        return false;
+      }
+
+      bool canCheckBiometrics = await auth.canCheckBiometrics;
+      bool isDeviceSupported = await auth.isDeviceSupported();
+
+      if (!canCheckBiometrics || !isDeviceSupported) {
+        errorMessage.value = 'Perangkat Anda tidak mendukung fitur biometrik.';
+        return false;
+      }
+
+      bool didAuthenticate = await auth.authenticate(
+        localizedReason: 'Pindai sidik jari Anda untuk masuk ke AquaSmart',
+        biometricOnly: true,
+      );
+
+      if (didAuthenticate) {
+        var userData = box.get(lastEmail);
+        if (userData != null) {
+          await StorageUtil.saveLoginSession(
+            lastEmail,
+            userData['nim'],
+            userData['name'],
+          );
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      errorMessage.value = 'Error biometrik: $e';
+      return false;
     }
   }
 }

@@ -1,44 +1,39 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:google_generative_ai/google_generative_ai.dart';
 import '../../core/constants/api_constants.dart';
 
 class ApiProvider {
-  // - 1. Fungsi ambil data suhu & cuaca -
+  // [1] PERBAIKAN OPEN-METEO: Menggunakan Standard Forecast API yang lebih stabil
   static Future<Map<String, dynamic>?> getWeather(
     double lat,
     double lng,
   ) async {
     try {
-      // menyusun url beserta parameter garis lintang (lat) dan bujur (lng)
+      // Menggunakan current_weather=true agar JSON yang dikembalikan lebih sederhana
       final url = Uri.parse(
-        '${ApiConstants.stormglassUrl}?lat=$lat&lng=$lng&params=waterTemperature',
+        'https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lng&current_weather=true',
       );
 
-      // melakukan http get request dengan api key
-      final response = await http.get(
-        url,
-        headers: {'Authorization': ApiConstants.stormglassKey},
-      );
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
+      } else {
+        print('Weather API Error: ${response.statusCode}');
+        return null;
       }
-      return null;
     } catch (e) {
       print('Error Weather API: $e');
       return null;
     }
   }
 
-  // - 2. Fungsi ambil kurs mata uang
   static Future<Map<String, dynamic>?> getCurrencyRates() async {
     try {
       final url = Uri.parse(ApiConstants.currencyUrl);
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) return jsonDecode(response.body);
       return null;
     } catch (e) {
       print('Error Currency API: $e');
@@ -46,21 +41,25 @@ class ApiProvider {
     }
   }
 
-  // 3. Fungsi ambil daftar ikan
-  static Future<Map<String, dynamic>?> getFishes() async {
+  // [3] Perbaikan Fish API: Ganti Map menjadi List
+  static Future<List<dynamic>?> getFishes() async {
     try {
       final url = Uri.parse(ApiConstants.fishUrl);
-      final response = await http.get(
-        url,
-        headers: {
-          'X-RapidAPI-Key': ApiConstants.fishKey,
-          'X-RapidAPI-Host': 'fish-species.p.rapidapi.com',
-        },
-      );
+      final response = await http
+          .get(
+            url,
+            headers: {
+              'X-RapidAPI-Key': ApiConstants.fishKey,
+              'X-RapidAPI-Host': 'fish-species.p.rapidapi.com',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        // Langsung return List dari JSON
+        return jsonDecode(response.body) as List<dynamic>;
       }
+      print('Fish API Server Error: ${response.statusCode}');
       return null;
     } catch (e) {
       print('Error Fish API: $e');
@@ -68,32 +67,20 @@ class ApiProvider {
     }
   }
 
-  // 4. Fungsi mengirim pesan ke chatbot ai
-  static Future<Map<String, dynamic>?> askCohereAI(String promptText) async {
+  // [4] PERBAIKAN GEMINI API: Menggunakan 'gemini-pro'
+  static Future<String?> askGemini(String promptText) async {
     try {
-      final url = Uri.parse(ApiConstants.cohereUrl);
-
-      // melakukan http post request karena kita mengirim prompt ke server
-      final response = await http.post(
-        url,
-        headers: {
-          'Authorization': 'Bearer ${ApiConstants.cohereKey}',
-          'Content-Type': 'aplication/json',
-        },
-        body: jsonEncode({
-          'model': 'command', // model ai
-          'prompt': promptText,
-          'max_tokens': 150, // batasan panjang jawaban agar tidak limit
-        }),
+      final model = GenerativeModel(
+        model: 'gemini-2.5-flash',
+        apiKey: ApiConstants.geminiKey,
       );
 
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        return data['generations'][0]['text']; // mengambil teks jawaban ai nya saja
-      }
-      return null;
+      final content = [Content.text(promptText)];
+      final response = await model.generateContent(content);
+
+      return response.text;
     } catch (e) {
-      print('Error Cohere API: $e');
+      print('Error Gemini API: $e');
       return null;
     }
   }

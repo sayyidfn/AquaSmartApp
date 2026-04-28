@@ -5,21 +5,30 @@ class StorageUtil {
   static const String keyUserNim = 'userNim';
   static const String keyUserName = 'userName';
 
-  // simpan sesi seteah login berhasil
-  static Future<void> saveLoginSession(String nim, String name) async {
+  static const String keyUserEmail = 'userEmail';
+
+  static Future<void> saveLoginSession(
+    String email,
+    String nim,
+    String name,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(keyIsLoggedIn, true);
+    await prefs.setString(keyUserEmail, email);
     await prefs.setString(keyUserNim, nim);
     await prefs.setString(keyUserName, name);
   }
 
-  // cek apakah user sedang login saat aplikasi pertama kali dibuka
+  static Future<String?> getLoggedInEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(keyUserEmail);
+  }
+
   static Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(keyIsLoggedIn) ?? false;
   }
 
-  // hapus sesi saat tombol logout ditekan
   static Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();

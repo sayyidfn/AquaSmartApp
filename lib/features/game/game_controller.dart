@@ -3,79 +3,50 @@ import 'package:get/get.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 class GameController extends GetxController {
-  // status game
-  var isPlaying = false.obs;
-  var isGameOver = false.obs;
   var score = 0.obs;
-  var lives = 3.obs;
+  var highScore = 0.obs;
 
-  // posisi ikan (sumbu x: -1.0 kiri mentok, 1.0 kanan mentok, 0.0 tengah)
-  var fishPositionX = 0.0.obs;
+  // Posisi karakter jaring di layar (Sumbu X)
+  var netPositionX = 0.0.obs;
 
   StreamSubscription? _gyroscopeSubscription;
 
   @override
   void onInit() {
     super.onInit();
-    _initGyroscopeSensor();
+    loadHighScore();
+    _initGyroscope();
   }
 
-  // - Fungsi sensor gyro (kemiringan hp)
-  void _initGyroscopeSensor() {
-    // menggunakan gyroscopeEventStream untuk membaca rotasi sumbu Y (kiri/kanan)
+  void _initGyroscope() {
+    // Menggunakan gyroscope untuk rotasi HP, atau accelerometer untuk kemiringan
     _gyroscopeSubscription = gyroscopeEventStream().listen((
       GyroscopeEvent event,
     ) {
-      if (!isPlaying.value || isGameOver.value) return;
+      // event.y mengukur rotasi kiri/kanan perangkat
+      // Kita tambahkan nilai sensitivitas ke netPositionX
+      netPositionX.value += (event.y * 10);
 
-      // E=event.y membaca kemiringan HP ke kiri/kanan.
-      // kalikan pengali kecepatan (misal 0.05) agar geraknya mulus.
-      double movement = event.y * 0.05;
-
-      // update posisi ikan
-      double newPosition = fishPositionX.value + movement;
-
-      // batasi agar ikan tidak keluar layar (-1.0 sampai 1.0)
-      if (newPosition < -1.0) newPosition = -1.0;
-      if (newPosition > 1.0) newPosition = 1.0;
-
-      fishPositionX.value = newPosition;
+      // Beri batas agar jaring tidak keluar layar (nanti disesuaikan dengan lebar layar)
+      if (netPositionX.value > 150) netPositionX.value = 150;
+      if (netPositionX.value < -150) netPositionX.value = -150;
     });
   }
 
-  // - Logika memulai game -
-  void startGame() {
-    score.value = 0;
-    lives.value = 3;
-    isGameOver.value = false;
-    isPlaying.value = true;
-    fishPositionX.value = 0.0; // ikan ada ditengah layar
-
-    print("Game Dimulai! Miringkan HP ke Kiri/Kanan");
-  }
-
-  void hitItem(bool isFood) {
-    if (isFood) {
-      score.value += 10; // tambah score jika makan pelet
-    } else {
-      lives.value -= 1; // kurangi nyawa jika kena sampah
-      if (lives.value <= 0) {
-        gameOver();
-      }
+  void addScore() {
+    score.value += 10;
+    if (score.value > highScore.value) {
+      highScore.value = score.value;
     }
   }
 
-  void gameOver() {
-    isPlaying.value = false;
-    isGameOver.value = true;
-    print("Game Over! Skor Akhir: ${score.value}");
-    // Tampilkan pesan edukasi di UI nanti
+  void loadHighScore() {
+    // Load dari Hive
   }
 
   @override
   void onClose() {
-    // Matikan sensor saat keluar dari halaman game
-    _gyroscopeSubscription?.cancel();
+    _gyroscopeSubscription?.cancel(); // Sangat penting agar HP tidak panas
     super.onClose();
   }
 }

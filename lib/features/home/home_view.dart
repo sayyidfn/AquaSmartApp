@@ -17,9 +17,8 @@ class HomeView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- HEADER ---
             Text(
-              'Hallo, User', // Nanti ini ditarik dari Hive/StorageUtil
+              'Hallo, User',
               style: GoogleFonts.inter(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -36,9 +35,6 @@ class HomeView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // --- MAIN CARD (WATER TEMP) ---
-            // ClipRRect memastikan lingkaran dekoratif ikut terpotong
-            // mengikuti border radius melengkung, bukan kotak
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: Container(
@@ -46,7 +42,6 @@ class HomeView extends StatelessWidget {
                 color: AppColors.primary, // deepOceanBlue = 0xFF0A5C7A
                 child: Stack(
                   children: [
-                    // Lingkaran besar dekoratif kanan atas
                     Positioned(
                       top: -50,
                       right: -60,
@@ -59,7 +54,6 @@ class HomeView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // Lingkaran kecil dekoratif kiri bawah
                     Positioned(
                       bottom: -55,
                       left: -55,
@@ -72,7 +66,6 @@ class HomeView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // Konten teks di atas lingkaran dekoratif
                     Padding(
                       padding: const EdgeInsets.all(24),
                       child: Column(
@@ -124,7 +117,6 @@ class HomeView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // --- METRICS ROW ---
             IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -188,7 +180,6 @@ class HomeView extends StatelessWidget {
             ),
             const SizedBox(height: 32),
 
-            // --- QUICK ACTIONS ---
             Text(
               'Quick Actions',
               style: GoogleFonts.inter(
@@ -198,7 +189,6 @@ class HomeView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
-            // IntrinsicHeight → paksa kedua card setinggi card yang paling tinggi
             IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -234,7 +224,6 @@ class HomeView extends StatelessWidget {
     );
   }
 
-  // Widget custom untuk kartu pH dan NH3
   Widget _buildMetricCard({
     required String title,
     required String value,
@@ -243,14 +232,12 @@ class HomeView extends StatelessWidget {
     required Color textColor,
   }) {
     return Expanded(
-      // ClipRRect agar lingkaran dekoratif ikut terpotong sesuai border radius
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: Container(
           color: bgColor,
           child: Stack(
             children: [
-              // Lingkaran dekoratif pojok kanan atas
               Positioned(
                 top: -23,
                 right: -23,
@@ -302,7 +289,6 @@ class HomeView extends StatelessWidget {
     );
   }
 
-  // Widget custom untuk Quick Actions
   Widget _buildActionCard({
     required String title,
     required String subtitle,
@@ -323,7 +309,6 @@ class HomeView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Gunakan SVG asset jika tersedia, fallback ke IconData
             if (iconAsset != null)
               SvgPicture.asset(
                 iconAsset,
@@ -334,7 +319,6 @@ class HomeView extends StatelessWidget {
             else if (iconData != null)
               Icon(iconData, color: iconColor, size: 28),
             const SizedBox(height: 20),
-            // FittedBox → auto-shrink font agar title tidak pernah wrap ke baris ke-2
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,

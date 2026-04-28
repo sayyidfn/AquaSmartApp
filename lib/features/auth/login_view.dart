@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
-import '../../widgets/custom_textfield.dart';
+import 'widgets/custom_textfield.dart';
 import 'auth_controller.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 

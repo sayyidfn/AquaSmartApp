@@ -4,9 +4,9 @@ import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import 'dashboard_controller.dart';
 import '../home/home_view.dart';
-// import '../encyclopedia/encyclopedia_view.dart'; // Aktifkan nanti
-// import '../pro_tools/pro_tools_view.dart'; // Aktifkan nanti
-// import '../profile/profile_view.dart'; // Aktifkan nanti
+import '../encyclopedia/encyclopedia_view.dart';
+import '../tools/tools_view.dart';
+import '../profile/profile_view.dart';
 
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
@@ -30,18 +30,9 @@ class DashboardView extends StatelessWidget {
           index: dashC.tabIndex.value,
           children: [
             const HomeView(), // Tab 0
-            Container(
-              color: AppColors.pureWhite,
-              child: const Center(child: Text('Encyclopedia Tab')),
-            ), // Tab 1 (Placeholder)
-            Container(
-              color: AppColors.pureWhite,
-              child: const Center(child: Text('Pro Tools Tab')),
-            ), // Tab 2 (Placeholder)
-            Container(
-              color: AppColors.pureWhite,
-              child: const Center(child: Text('Profile Tab')),
-            ), // Tab 3 (Placeholder)
+            const EncyclopediaView(), // Tab 1
+            const ToolsView(), // Tab 2
+            const ProfileView(), // Tab 3
           ],
         ),
       ),
@@ -89,7 +80,6 @@ class DashboardView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Icon container (rounded square untuk aktif, transparan untuk non-aktif)
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
@@ -109,7 +99,6 @@ class DashboardView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          // Dot indicator — hanya muncul pada tab aktif
           AnimatedOpacity(
             duration: const Duration(milliseconds: 200),
             opacity: isActive ? 1.0 : 0.0,

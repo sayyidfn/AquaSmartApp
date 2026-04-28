@@ -1,5 +1,7 @@
-package com.example.aquasmart
+package com.example.aquasmart // Pastikan ini sesuai dengan nama package Anda
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// Ubah FlutterActivity menjadi FlutterFragmentActivity
+class MainActivity: FlutterFragmentActivity() {
+}
