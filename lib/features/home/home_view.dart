@@ -210,9 +210,7 @@ class HomeView extends StatelessWidget {
                       iconAsset: null,
                       iconData: Icons.location_on_outlined,
                       iconColor: AppColors.locationRed, // 0xFFEA4335
-                      onTap: () {
-                        // Logika map nanti
-                      },
+                      onTap: () => Get.toNamed('/maps')
                     ),
                   ),
                 ],

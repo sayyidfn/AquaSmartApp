@@ -12,13 +12,13 @@ import '../features/auth/login_view.dart';
 import '../features/auth/register_view.dart'; // Sudah dipindah ke kelompok UI
 import '../features/dashboard/dashboard_view.dart';
 import '../features/game/game_view.dart';
+import '../features/maps/maps_view.dart';
 
 // import controllers (logic) - Hanya untuk yang masih pakai BindingsBuilder langsung
 import '../features/game/game_controller.dart';
+import '../features/maps/maps_controller.dart';
 
 class AppPages {
-  // PERBAIKAN 1: Mengubah INITIAL menjadi initial agar sesuai standar Dart
-  static const initial = Routes.AUTH;
 
   // daftar rute
   static final routes = [
@@ -45,6 +45,13 @@ class AppPages {
       // yang ini biarkan menggunakan cara lama (inline) sementara waktu
       binding: BindingsBuilder(() {
         Get.put(GameController());
+      }),
+    ),
+    GetPage(
+      name: Routes.MAPS,
+      page: () => const MapsView(),
+      binding: BindingsBuilder(() {
+        Get.put(MapsController());
       }),
     ),
   ];

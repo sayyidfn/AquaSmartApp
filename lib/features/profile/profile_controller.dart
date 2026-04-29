@@ -1,113 +1,162 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:image_picker/image_picker.dart'; 
+import 'package:local_auth/local_auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../core/utils/storage_util.dart';
+import '../../data/locals/hive_provider.dart';
 
 class ProfileController extends GetxController {
-  var testimonialController = TextEditingController();
+  // ==========================================
+  // 1. VARIABEL STATE (Disamakan persis dengan ProfileView)
+  // ==========================================
 
-  var isEditingTestimonial = false.obs;
-  var isBiometricEnabled = false.obs;
+  // Data User
+  var currentName = 'Loading...'.obs;
+  var currentNim = '...'.obs;
+  String? currentUserEmail;
 
-  var currentUserEmail = ''.obs;
-  
-  var currentName = ''.obs;
-  var currentNim = ''.obs;
+  // Foto Profil
   var currentProfileImagePath = ''.obs;
+  final ImagePicker _picker = ImagePicker();
 
+  // Testimoni
+  var isEditingTestimonial = false.obs;
+  final TextEditingController testimonialController = TextEditingController();
+
+  // Biometrik
+  var isBiometricEnabled = false.obs;
+  final LocalAuthentication auth = LocalAuthentication();
+
+  // ==========================================
+  // 2. INISIALISASI AWAL (Load Data)
+  // ==========================================
   @override
   void onInit() {
     super.onInit();
-    loadUserData();
+    _loadUserData();
   }
 
-  void loadUserData() async {
-    currentUserEmail.value = await StorageUtil.getLoggedInEmail() ?? '';
+  Future<void> _loadUserData() async {
+    currentUserEmail = await StorageUtil.getLoggedInEmail();
 
-    var box = Hive.box('userBox');
-    isBiometricEnabled.value = box.get('use_biometric', defaultValue: false);
+    // Ambil Nama dan NIM dari SharedPreferences (karena disave saat login)
+    final prefs = await SharedPreferences.getInstance();
+    currentName.value =
+        prefs.getString(StorageUtil.keyUserName) ?? 'User Unknown';
+    currentNim.value = prefs.getString(StorageUtil.keyUserNim) ?? '000000';
 
-    if (currentUserEmail.value.isNotEmpty) {
-      var userData = box.get(currentUserEmail.value);
-      if (userData != null) {
-        // Langsung isi ke variabel reaktif, tanpa perlu TextEditingController
-        currentName.value = userData['name'] ?? 'Sayyid Fakhri Nurjundi';
-        currentNim.value = userData['nim'] ?? '123230172';
-        currentProfileImagePath.value = userData['profile_image'] ?? '';
-        
-        testimonialController.text = userData['testimonial'] ?? '';
-      }
-    }
-  }
-
-  Future<void> pickProfileImage() async {
-    final ImagePicker picker = ImagePicker();
-    try {
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        currentProfileImagePath.value = image.path;
-        
-        var box = Hive.box('userBox');
-        var userData = box.get(currentUserEmail.value) ?? {};
-        userData['profile_image'] = image.path;
-        box.put(currentUserEmail.value, userData);
-        
-        Get.snackbar('Sukses', 'Foto profil berhasil diperbarui', snackPosition: SnackPosition.BOTTOM);
-      }
-    } catch (e) {
-      Get.snackbar('Error', 'Gagal memilih foto: $e', snackPosition: SnackPosition.BOTTOM);
-    }
-  }
-
-  void toggleBiometric(bool value) {
-    isBiometricEnabled.value = value;
-    var box = Hive.box('userBox');
-    box.put('use_biometric', value);
-
-    if (value) {
-      Get.snackbar(
-        'Biometrik Aktif',
-        'Login dengan sidik jari/Face ID diaktifkan',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+    if (currentUserEmail != null) {
+      // Load semua data dari brankas Hive sesuai email
+      isBiometricEnabled.value = HiveProvider.getBiometricStatus(
+        currentUserEmail!,
+      );
+      currentProfileImagePath.value = HiveProvider.getProfileImagePath(
+        currentUserEmail!,
+      );
+      testimonialController.text = HiveProvider.getTestimonialContent(
+        currentUserEmail!,
       );
     }
   }
 
-  void toggleEditTestimonial() {
-    isEditingTestimonial.value = !isEditingTestimonial.value;
-    if (!isEditingTestimonial.value) {
-      _saveTestimonial();
+  // ==========================================
+  // 3. FUNGSI FOTO PROFIL (ANTI-LAG)
+  // ==========================================
+  Future<void> pickProfileImage() async {
+    if (currentUserEmail == null) {
+      Get.snackbar('Error', 'Sesi tidak valid.');
+      return;
+    }
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 50, // Kompresi agar tidak lag
+        maxWidth: 800,
+      );
+
+      if (image != null) {
+        currentProfileImagePath.value = image.path; // Update UI
+        HiveProvider.saveProfileImagePath(
+          currentUserEmail!,
+          image.path,
+        ); // Simpan permanen
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal memuat gambar galeri.');
     }
   }
 
-  void _saveTestimonial() {
-    var box = Hive.box('userBox');
-    var userData = box.get(currentUserEmail.value) ?? {};
+  // ==========================================
+  // 4. FUNGSI TESTIMONI
+  // ==========================================
+  void toggleEditTestimonial() {
+    // Balikkan status (dari baca ke edit, atau edit ke baca)
+    isEditingTestimonial.value = !isEditingTestimonial.value;
 
-    userData['testimonial'] = testimonialController.text;
-    box.put(currentUserEmail.value, userData);
-
-    Get.snackbar(
-      'Berhasil',
-      'Testimoni mata kuliah berhasil disimpan',
-      backgroundColor: Colors.blue,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    // Jika user selesai mengedit (menekan tombol centang)
+    if (!isEditingTestimonial.value && currentUserEmail != null) {
+      // Simpan teks testimoni ke brankas Hive (default bintang 5 untuk saat ini)
+      HiveProvider.saveTestimonial(
+        currentUserEmail!,
+        testimonialController.text,
+        5,
+      );
+      Get.snackbar(
+        'Berhasil',
+        'Testimoni Anda telah disimpan!',
+        backgroundColor: Colors.green.withValues(alpha: 0.8),
+        colorText: Colors.white,
+      );
+    }
   }
 
-  void logout() {
-    StorageUtil.clearSession();
+  // ==========================================
+  // 5. FUNGSI BIOMETRIK
+  // ==========================================
+  Future<void> toggleBiometric(bool value) async {
+    if (currentUserEmail == null) return;
+
+    if (value == true) {
+      try {
+        bool canCheck = await auth.canCheckBiometrics;
+        bool isSupported = await auth.isDeviceSupported();
+
+        if (canCheck && isSupported) {
+          bool didAuthenticate = await auth.authenticate(
+            localizedReason:
+                'Pindai biometrik Anda untuk mengaktifkan login cepat',
+            biometricOnly: true,
+          );
+
+          if (didAuthenticate) {
+            isBiometricEnabled.value = true;
+            HiveProvider.saveBiometricStatus(currentUserEmail!, true);
+          } else {
+            isBiometricEnabled.value = false;
+          }
+        } else {
+          Get.snackbar('Info', 'Perangkat tidak mendukung biometrik');
+          isBiometricEnabled.value = false;
+        }
+      } catch (e) {
+        isBiometricEnabled.value = false;
+      }
+    } else {
+      isBiometricEnabled.value = false;
+      HiveProvider.saveBiometricStatus(currentUserEmail!, false);
+    }
+  }
+
+  // ==========================================
+  // 6. FUNGSI LOGOUT
+  // ==========================================
+  Future<void> logout() async {
+    // Bersihkan sesi di StorageUtil
+    await StorageUtil.clearSession();
+
+    // Arahkan kembali ke halaman Login (sesuaikan dengan nama rute Anda, misal '/login')
     Get.offAllNamed('/auth');
-  }
-
-  @override
-  void onClose() {
-    // Sekarang kita hanya perlu membuang 1 controller saja
-    testimonialController.dispose();
-    super.onClose();
   }
 }

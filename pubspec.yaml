@@ -45,7 +45,7 @@ dependencies:
   http: ^1.2.0
 
   # --- SENSOR & HARDWARE ---
-  sensors_plus: ^5.0.1 # Untuk Accelerometer & Gyroscope
+  sensors_plus: ^7.0.0 # Untuk Accelerometer & Gyroscope
   local_auth: ^3.0.1 # Untuk Login Biometrik
 
   # --- LOCATION BASED SERVICES ---
@@ -58,6 +58,10 @@ dependencies:
   flutter_svg: ^2.2.4
   google_generative_ai: ^0.4.7
   image_picker: ^1.2.1
+  flame: ^1.35.1
+  light: ^5.0.0
+
+  google_maps_flutter: ^2.5.3 # Untuk merender Peta, Lingkaran Radius, dan Marker
 
 dev_dependencies:
   flutter_test:

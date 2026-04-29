@@ -13,6 +13,9 @@ class AppColors {
   static const Color softGray = Color(0xFF8CAEBB);
   static const Color dangerRed = Color(0xFFDC3545);
 
+  // ---> TAMBAHAN WARNA BARU ANDA <---
+  static const Color darkNavy = Color(0xFF0B2A46);
+
   // ==========================================
   // 2. TAMBAHAN DARI HALAMAN HOME / DASHBOARD
   // ==========================================
@@ -34,4 +37,7 @@ class AppColors {
   static const Color tfBackground = Color(0xFFF0F7FA);
   static const Color tfBorder = Color(0xFFD1E4ED);
   static const Color textDark = Color(0xFF1A1A1A);
+
+  // ---> TAMBAHAN SEMANTIK UNTUK GAME <---
+  static const Color gameScoreText = darkNavy;
 }

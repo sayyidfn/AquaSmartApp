@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:local_auth/local_auth.dart';
 import '../../core/utils/storage_util.dart';
+import '../../data/locals/hive_provider.dart';
 
 class AuthController extends GetxController {
   var isLoading = false.obs;
@@ -98,17 +99,28 @@ class AuthController extends GetxController {
     var box = Hive.box(userBoxName);
     return box.get('use_biometric', defaultValue: false);
   }
+  // - Fungsi Login Biometrik -
   Future<bool> loginWithBiometric() async {
     try {
       var box = Hive.box(userBoxName);
       String? lastEmail = box.get('last_logged_in_email');
 
+      // 1. Cek apakah ada histori login
       if (lastEmail == null || lastEmail.isEmpty) {
         errorMessage.value =
-            'Data login sebelumnya tidak ditemukan. Silakan login manual.';
+            'Data login sebelumnya tidak ditemukan. Silakan login manual dengan email.';
         return false;
       }
 
+      // 2. Cek apakah user ini menyalakan sakelar biometrik di halaman Profil
+      bool isEnabled = HiveProvider.getBiometricStatus(lastEmail);
+      if (!isEnabled) {
+        errorMessage.value =
+            'Fitur biometrik belum diaktifkan untuk akun ini. Silakan login manual dan aktifkan di menu Profil.';
+        return false;
+      }
+
+      // 3. Cek dukungan hardware HP
       bool canCheckBiometrics = await auth.canCheckBiometrics;
       bool isDeviceSupported = await auth.isDeviceSupported();
 
@@ -117,11 +129,13 @@ class AuthController extends GetxController {
         return false;
       }
 
+      // 4. Munculkan pop-up sensor sidik jari (Sesuai dengan sintaks tooltip Anda)
       bool didAuthenticate = await auth.authenticate(
         localizedReason: 'Pindai sidik jari Anda untuk masuk ke AquaSmart',
         biometricOnly: true,
       );
 
+      // 5. Jika sidik jari cocok, langsung buatkan sesi login!
       if (didAuthenticate) {
         var userData = box.get(lastEmail);
         if (userData != null) {
@@ -133,9 +147,9 @@ class AuthController extends GetxController {
           return true;
         }
       }
-      return false;
+      return false; // Jika batal memindai
     } catch (e) {
-      errorMessage.value = 'Error biometrik: $e';
+      errorMessage.value = 'Sensor dibatalkan atau terjadi kesalahan.';
       return false;
     }
   }

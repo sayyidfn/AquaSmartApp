@@ -146,8 +146,25 @@ class LoginView extends StatelessWidget {
                     color: AppColors.primary,
                     size: 32,
                   ),
-                  onPressed: () {
-                    // Implementasi local_auth nanti
+                  onPressed: () async {
+                    // 1. Panggil fungsi biometrik saat tombol sidik jari ditekan
+                    bool success = await authC.loginWithBiometric();
+
+                    // 2. Jika sidik jari cocok, langsung lempar ke Dashboard
+                    if (success) {
+                      Get.offAllNamed('/dashboard');
+                    }
+                    // 3. Jika gagal/dibatalkan, munculkan pesan error
+                    else if (authC.errorMessage.value.isNotEmpty) {
+                      Get.snackbar(
+                        'Biometrik Gagal',
+                        authC.errorMessage.value,
+                        backgroundColor: Colors.redAccent,
+                        colorText: Colors.white,
+                        snackPosition: SnackPosition.BOTTOM,
+                        margin: const EdgeInsets.all(24),
+                      );
+                    }
                   },
                 ),
               ),
