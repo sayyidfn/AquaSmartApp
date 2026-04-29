@@ -19,11 +19,15 @@ class MapsView extends StatelessWidget {
             () => GoogleMap(
               initialCameraPosition: CameraPosition(
                 target: controller.currentLatLng.value,
-                zoom: 12,
+                zoom:
+                    12, // Anda bisa ubah jadi 13 atau 14 kalau ingin lebih dekat
               ),
-              markers: controller.markers,
-              circles: controller.circles,
-              myLocationEnabled: true, // Menampilkan titik biru (lokasi user)
+
+              // PERBAIKAN DI SINI (Tambahkan .toSet())
+              markers: controller.markers.toSet(),
+              circles: controller.circles.toSet(),
+
+              myLocationEnabled: true,
               onMapCreated: (GoogleMapController gController) {},
             ),
           ),

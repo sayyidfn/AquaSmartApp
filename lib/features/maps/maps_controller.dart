@@ -13,7 +13,6 @@ class MapsController extends GetxController {
   var placeList = <dynamic>[].obs;
   var isLoading = false.obs;
 
-
   @override
   void onInit() {
     super.onInit();
@@ -42,7 +41,6 @@ class MapsController extends GetxController {
   }
 
   void fetchNearbyPlaces(double lat, double lng) async {
-    // Mencari tempat dengan kategori 'pet_store' dan kata kunci 'aquarium'
     final String url =
         "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lng&radius=10000&type=pet_store&keyword=aquarium&key=${ApiConstants.googleMapsKey}";
 
@@ -52,14 +50,17 @@ class MapsController extends GetxController {
         var data = json.decode(response.body);
         var results = data['results'] as List;
 
-        placeList.value = results; // Update list untuk kartu di bawah
-        markers.clear();
+        // 1. Update daftar teks di bawah
+        placeList.value = results;
+
+        // 2. PERBAIKAN: Buat "wadah Set" sementara yang baru
+        Set<Marker> newMarkers = {};
 
         for (var place in results) {
           final latToko = place['geometry']['location']['lat'];
           final lngToko = place['geometry']['location']['lng'];
 
-          markers.add(
+          newMarkers.add(
             Marker(
               markerId: MarkerId(place['place_id']),
               position: LatLng(latToko, lngToko),
@@ -73,6 +74,9 @@ class MapsController extends GetxController {
             ),
           );
         }
+
+        // 3. Timpa state markers yang lama dengan yang baru sekaligus
+        markers.value = newMarkers;
       }
     } catch (e) {
       print("Error fetching places: $e");
