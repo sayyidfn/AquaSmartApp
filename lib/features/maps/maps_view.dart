@@ -19,19 +19,29 @@ class MapsView extends StatelessWidget {
             () => GoogleMap(
               initialCameraPosition: CameraPosition(
                 target: controller.currentLatLng.value,
-                zoom:
-                    12, // Anda bisa ubah jadi 13 atau 14 kalau ingin lebih dekat
+                zoom: 13,
               ),
-
-              // PERBAIKAN DI SINI (Tambahkan .toSet())
+              // Penting: Menggunakan .value agar Obx mendeteksi perubahan Set
               markers: controller.markers.toSet(),
               circles: controller.circles.toSet(),
 
-              myLocationEnabled: true,
-              onMapCreated: (GoogleMapController gController) {},
+              myLocationEnabled: true, // Menampilkan titik biru lokasi Anda
+              myLocationButtonEnabled: true,
+              zoomControlsEnabled:
+                  false, // Matikan agar tidak mengganggu UI desain Anda
+
+              onMapCreated: (gController) {
+                controller.mapController = gController;
+                // Jika posisi sudah didapat sebelum map siap, animasikan sekarang
+                gController.animateCamera(
+                  CameraUpdate.newLatLngZoom(
+                    controller.currentLatLng.value,
+                    13,
+                  ),
+                );
+              },
             ),
           ),
-
           // LAYER 2: TOMBOL BACK Melayang Kiri Atas
           Positioned(
             top: 50,
@@ -75,6 +85,7 @@ class MapsView extends StatelessWidget {
                     ),
                   ),
                   // List Toko Ikan
+                  // ... bagian atas MapsView tetap sama ...
                   Expanded(
                     child: Obx(
                       () => controller.isLoading.value
@@ -83,13 +94,22 @@ class MapsView extends StatelessWidget {
                               itemCount: controller.placeList.length,
                               itemBuilder: (context, index) {
                                 var toko = controller.placeList[index];
+                                var latToko =
+                                    toko['geometry']['location']['lat'];
+                                var lngToko =
+                                    toko['geometry']['location']['lng'];
+
                                 return Card(
                                   elevation: 0,
                                   color: Colors.blue[50],
+                                  margin: const EdgeInsets.only(bottom: 10),
                                   child: ListTile(
-                                    leading: const Icon(
-                                      Icons.storefront,
-                                      color: Colors.blue,
+                                    leading: const CircleAvatar(
+                                      backgroundColor: Colors.blue,
+                                      child: Icon(
+                                        Icons.store,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                     title: Text(
                                       toko['name'],
@@ -97,13 +117,26 @@ class MapsView extends StatelessWidget {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    subtitle: Text(
-                                      toko['vicinity'] ??
-                                          "Alamat tidak tersedia",
-                                    ),
+
+                                    // TAMPILKAN JARAK DI SINI
+                                    subtitle: Text("${toko['vicinity']}"),
+
                                     trailing: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.grey[800],
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                      ),
                                       onPressed: () {
-                                        // Nanti di sini kita pasang url_launcher untuk rute
+                                        // PANGGIL FUNGSI RUTE
+                                        controller.openDirections(
+                                          latToko,
+                                          lngToko,
+                                        );
                                       },
                                       child: const Text("Rute"),
                                     ),

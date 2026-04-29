@@ -17,12 +17,14 @@ class HomeView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Hallo, User',
-              style: GoogleFonts.inter(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+            Obx(
+              () => Text(
+                'Hallo, ${homeC.userName.value}',
+                style: GoogleFonts.inter(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
             ),
             const SizedBox(height: 4),
@@ -210,7 +212,7 @@ class HomeView extends StatelessWidget {
                       iconAsset: null,
                       iconData: Icons.location_on_outlined,
                       iconColor: AppColors.locationRed, // 0xFFEA4335
-                      onTap: () => Get.toNamed('/maps')
+                      onTap: () => Get.toNamed('/maps'),
                     ),
                   ),
                 ],

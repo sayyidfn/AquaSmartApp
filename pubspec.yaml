@@ -50,7 +50,7 @@ dependencies:
 
   # --- LOCATION BASED SERVICES ---
   geolocator: ^11.0.0
-  url_launcher: ^6.2.5 # Untuk membuka Google Maps
+  url_launcher: ^6.3.0 # Untuk membuka Google Maps
 
   # --- UI & UTILITAS ---
   google_fonts: ^6.2.1 # Untuk tipografi yang rapi (misal: Poppins)
