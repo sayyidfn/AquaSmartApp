@@ -15,6 +15,7 @@ class ToolsController extends GetxController {
   var isLoadingCurrency = false.obs;
   var usdToIdr = 0.0.obs;
   var eurToIdr = 0.0.obs;
+  var gbpToIdr = 0.0.obs;
 
   @override
   void onInit() {
@@ -61,6 +62,9 @@ class ToolsController extends GetxController {
       // Karena base-nya USD, untuk dapat EUR ke IDR kita harus membagi rasio IDR dengan EUR
       double eurRate = (data['eur']['rate'] ?? 1).toDouble();
       eurToIdr.value = usdToIdr.value / eurRate;
+
+      double gbpRate = (data['gbp']['rate'] ?? 1).toDouble();
+      gbpToIdr.value = usdToIdr.value / gbpRate;
     } else {
       Future.delayed(const Duration(milliseconds: 200), () {
         Get.snackbar('Error', 'Gagal memuat data kurs terbaru');
@@ -77,44 +81,57 @@ class ToolsController extends GetxController {
   var conversionResult = '0.00'.obs;
 
   // Daftar mata uang yang tersedia di dropdown
-  final List<String> currencies = ['USD', 'EUR', 'IDR'];
+  final List<String> currencies = ['USD', 'EUR', 'GBP', 'IDR'];
 
   void convertCurrency() {
     double amount = double.tryParse(amountController.text) ?? 0.0;
-    double result = 0.0;
 
     if (amount == 0.0) {
       conversionResult.value = '0.00';
       return;
     }
 
-    // Logika perhitungan berdasarkan kurs dari Floatrates API
-    if (selectedFrom.value == 'USD' && selectedTo.value == 'IDR') {
-      result = amount * usdToIdr.value;
-    } else if (selectedFrom.value == 'EUR' && selectedTo.value == 'IDR') {
-      result = amount * eurToIdr.value;
-    } else if (selectedFrom.value == 'IDR' && selectedTo.value == 'USD') {
-      result = amount / usdToIdr.value;
-    } else if (selectedFrom.value == 'IDR' && selectedTo.value == 'EUR') {
-      result = amount / eurToIdr.value;
-    } else if (selectedFrom.value == 'USD' && selectedTo.value == 'EUR') {
-      // Cross rate USD -> IDR -> EUR
-      double inIdr = amount * usdToIdr.value;
-      result = inIdr / eurToIdr.value;
-    } else if (selectedFrom.value == 'EUR' && selectedTo.value == 'USD') {
-      // Cross rate EUR -> IDR -> USD
-      double inIdr = amount * eurToIdr.value;
-      result = inIdr / usdToIdr.value;
+    // TAHAP A: Konversi mata uang ASAL (From) ke IDR terlebih dahulu
+    double amountInIdr = 0.0;
+    if (selectedFrom.value == 'USD') {
+      amountInIdr = amount * usdToIdr.value;
+    } else if (selectedFrom.value == 'EUR') {
+      amountInIdr = amount * eurToIdr.value;
+    } else if (selectedFrom.value == 'GBP') {
+      amountInIdr = amount * gbpToIdr.value;
     } else {
-      result = amount; // Jika dari dan ke mata uang yang sama
+      amountInIdr = amount; // Jika asalnya sudah IDR
     }
 
-    // Format hasilnya (misal: Rp 15.000)
+    // TAHAP B: Konversi dari IDR ke mata uang TUJUAN (To)
+    double result = 0.0;
+    if (selectedTo.value == 'USD') {
+      result = amountInIdr / usdToIdr.value;
+    } else if (selectedTo.value == 'EUR') {
+      result = amountInIdr / eurToIdr.value;
+    } else if (selectedTo.value == 'GBP') {
+      result = amountInIdr / gbpToIdr.value;
+    } else {
+      result = amountInIdr; // Jika tujuannya IDR
+    }
+
+    // 5. ATUR SIMBOL MATA UANGNYA
+    String symbol = '';
+    if (selectedTo.value == 'IDR') {
+      symbol = 'Rp ';
+    } else if (selectedTo.value == 'EUR') {
+      symbol = '€';
+    } else if (selectedTo.value == 'GBP') {
+      symbol = '£';
+    } // Simbol Poundsterling
+    else {
+      symbol = '\$';
+    }
+
+    // Format hasil akhir
     conversionResult.value = NumberFormat.currency(
       locale: selectedTo.value == 'IDR' ? 'id_ID' : 'en_US',
-      symbol: selectedTo.value == 'IDR'
-          ? 'Rp '
-          : (selectedTo.value == 'EUR' ? '€' : '\$'),
+      symbol: symbol,
       decimalDigits: 2,
     ).format(result);
   }
@@ -124,18 +141,6 @@ class ToolsController extends GetxController {
     amountController.dispose();
     super.dispose();
   }
-
-  String get formattedUsd => NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  ).format(usdToIdr.value);
-
-  String get formattedEur => NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-  ).format(eurToIdr.value);
 
   @override
   void onClose() {

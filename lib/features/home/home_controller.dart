@@ -4,6 +4,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 import '../../data/providers/api_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/utils/storage_util.dart';
+import '../../core/utils/notification_helper.dart';
 
 class HomeController extends GetxController {
   var isLoading = false.obs;
@@ -18,6 +19,7 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    NotificationHelper.requestPermission();
     fetchWeatherData();
     loadUserName();
     _initShakeSensor();
@@ -58,11 +60,34 @@ class HomeController extends GetxController {
 
     var data = await ApiProvider.getWeather(lat, lng);
 
-    // PERBAIKAN: Membaca struktur JSON Standard Forecast (current_weather)
     if (data != null && data['current_weather'] != null) {
-      // Pastikan konversi ke double aman
-      waterTemperature.value = (data['current_weather']['temperature'] as num)
-          .toDouble();
+      double temp = (data['current_weather']['temperature'] as num).toDouble();
+      waterTemperature.value = temp;
+
+      // LOGIKA NOTIFIKASI PINTAR!
+      if (temp > 28.0) {
+        NotificationHelper.showNotification(
+          id: 1,
+          title: '🚨 Peringatan Suhu Panas!',
+          body:
+              'Suhu air mencapai $temp°C. Segera nyalakan pendingin atau periksa sirkulasi air akuarium Anda.',
+        );
+      } else if (temp < 26.0) {
+        NotificationHelper.showNotification(
+          id: 2,
+          title: '❄️ Peringatan Suhu Dingin!',
+          body:
+              'Suhu air turun ke $temp°C. Ikan tropis Anda butuh kehangatan, nyalakan Heater sekarang.',
+        );
+      } else {
+        // Opsional: Notifikasi jika aman (Bisa dihapus jika dirasa mengganggu)
+        NotificationHelper.showNotification(
+          id: 3,
+          title: '✅ Akuarium Aman',
+          body:
+              'Suhu air stabil di $temp°C. Kondisi ideal untuk ikan kesayangan Anda.',
+        );
+      }
     } else {
       errorMessage.value = 'Gagal mengambil data cuaca';
     }

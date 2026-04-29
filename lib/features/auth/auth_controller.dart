@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:local_auth/local_auth.dart';
 import '../../core/utils/storage_util.dart';
@@ -12,7 +14,6 @@ class AuthController extends GetxController {
   var isConfirmPasswordHidden = true.obs;
 
   final String userBoxName = 'userBox';
-
   final LocalAuthentication auth = LocalAuthentication();
 
   void togglePasswordVisibility() {
@@ -23,6 +24,18 @@ class AuthController extends GetxController {
     isConfirmPasswordHidden.value = !isConfirmPasswordHidden.value;
   }
 
+  // ==========================================
+  // FUNGSI RAHASIA: Mengubah Password jadi Hash SHA-256
+  // ==========================================
+  String _hashPassword(String password) {
+    var bytes = utf8.encode(password); // Konversi string ke bytes
+    var digest = sha256.convert(bytes); // Lakukan hashing
+    return digest.toString(); // Kembalikan dalam bentuk string acak
+  }
+
+  // ==========================================
+  // REGISTER
+  // ==========================================
   Future<bool> register(
     String name,
     String nim,
@@ -43,11 +56,14 @@ class AuthController extends GetxController {
         return false;
       }
 
+      // ENKRIPSI PASSWORD SEBELUM DISIMPAN!
+      String hashedPassword = _hashPassword(password);
+
       await box.put(email, {
         'name': name,
         'nim': nim,
         'email': email,
-        'password': password,
+        'password': hashedPassword, // Yang disimpan adalah versi Hash-nya
       });
 
       errorMessage.value = '';
@@ -60,7 +76,9 @@ class AuthController extends GetxController {
     }
   }
 
-  // - Fungsi Login Standar -
+  // ==========================================
+  // LOGIN
+  // ==========================================
   Future<bool> login(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
       errorMessage.value = 'Email dan Password harus diisi!';
@@ -72,7 +90,11 @@ class AuthController extends GetxController {
       var box = Hive.box(userBoxName);
       var userData = box.get(email);
 
-      if (userData != null && userData['password'] == password) {
+      // ENKRIPSI INPUT PASSWORD DARI USER UNTUK DICOCOKKAN DENGAN DATABASE
+      String hashedInputPassword = _hashPassword(password);
+
+      // Cocokkan hash dengan hash
+      if (userData != null && userData['password'] == hashedInputPassword) {
         await StorageUtil.saveLoginSession(
           email,
           userData['nim'],
@@ -99,6 +121,7 @@ class AuthController extends GetxController {
     var box = Hive.box(userBoxName);
     return box.get('use_biometric', defaultValue: false);
   }
+
   // - Fungsi Login Biometrik -
   Future<bool> loginWithBiometric() async {
     try {
