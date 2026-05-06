@@ -31,8 +31,7 @@ class ProfileView extends StatelessWidget {
                 Positioned(
                   bottom: -50,
                   child: GestureDetector(
-                    onTap: controller
-                        .pickProfileImage,
+                    onTap: controller.pickProfileImage,
                     child: Obx(
                       () => Container(
                         width: 110,

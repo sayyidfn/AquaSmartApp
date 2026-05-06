@@ -13,8 +13,7 @@ class ToolsView extends StatelessWidget {
     final ToolsController controller = Get.put(ToolsController());
 
     return Scaffold(
-      backgroundColor:
-          AppColors.pureWhite,
+      backgroundColor: AppColors.pureWhite,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -48,9 +47,7 @@ class ToolsView extends StatelessWidget {
               // - Clock -
               _buildWorldClockCard(controller),
 
-              const SizedBox(
-                height: 80,
-              ),
+              const SizedBox(height: 80),
             ],
           ),
         ),
@@ -138,8 +135,7 @@ class ToolsView extends StatelessWidget {
                     border: Border.all(color: AppColors.tfBorder),
                   ),
                   child: TextField(
-                    controller:
-                        controller.amountController,
+                    controller: controller.amountController,
                     keyboardType: TextInputType.number,
                     style: GoogleFonts.inter(
                       fontSize: 16,
@@ -160,10 +156,7 @@ class ToolsView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildInputLabel('From'),
-                          _buildRealDropdown(
-                            controller,
-                            true,
-                          ),
+                          _buildRealDropdown(controller, true),
                         ],
                       ),
                     ),
@@ -173,10 +166,7 @@ class ToolsView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildInputLabel('To'),
-                          _buildRealDropdown(
-                            controller,
-                            false,
-                          ),
+                          _buildRealDropdown(controller, false),
                         ],
                       ),
                     ),
@@ -188,8 +178,7 @@ class ToolsView extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () =>
-                      controller.convertCurrency(),
+                    onPressed: () => controller.convertCurrency(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -403,7 +392,7 @@ class ToolsView extends StatelessWidget {
                   'Jayapura (WIT)',
                   'Coral Farms',
                   controller.timeWIT.value,
-                ), 
+                ),
               ],
             ),
           ),
@@ -422,7 +411,7 @@ class ToolsView extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildPriceRow(String item, String price) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

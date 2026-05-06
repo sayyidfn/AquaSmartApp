@@ -19,7 +19,6 @@ import '../features/game/game_controller.dart';
 import '../features/maps/maps_controller.dart';
 
 class AppPages {
-
   // daftar rute
   static final routes = [
     GetPage(

@@ -239,8 +239,7 @@ class _SpeciesCard extends StatelessWidget {
       case 'Least Concern':
         return AppColors.seaGreen;
       default:
-        return AppColors
-            .primary;
+        return AppColors.primary;
     }
   }
 
