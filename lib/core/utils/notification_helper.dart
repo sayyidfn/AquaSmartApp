@@ -5,14 +5,13 @@ class NotificationHelper {
       FlutterLocalNotificationsPlugin();
 
   static Future<void> init() async {
-    // 1. KEMBALIKAN @mipmap/ AGAR ANDROID BISA MENEMUKAN LOGO APLIKASI
-    const AndroidInitializationSettings initializationSettingsAndroid =
+    const AndroidInitializationSettings initSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
+    const InitializationSettings initSettings =
+        InitializationSettings(android: initSettingsAndroid);
 
-    await _notificationsPlugin.initialize(settings: initializationSettings);
+    await _notificationsPlugin.initialize(settings: initSettings);
   }
 
   static Future<void> requestPermission() async {
@@ -28,16 +27,15 @@ class NotificationHelper {
     required String title,
     required String body,
   }) async {
-    const AndroidNotificationDetails
-    androidDetails = AndroidNotificationDetails(
-      'aquasmart_channel_v2', // 2. KITA GANTI ID CHANNEL AGAR ANDROID ME-RESET PENGATURANNYA
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+      'aquasmart_channel_v2',
       'AquaSmart Peringatan',
       channelDescription: 'Notifikasi peringatan kondisi akuarium',
       importance: Importance.max,
       priority: Priority.high,
       enableVibration: true,
-      icon:
-          '@mipmap/ic_launcher', // 3. PASTIKAN ICON DIPANGGIL SECARA EKSPLISIT DI SINI
+      icon: '@mipmap/ic_launcher',
     );
 
     const NotificationDetails platformDetails = NotificationDetails(

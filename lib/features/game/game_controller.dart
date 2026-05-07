@@ -1,10 +1,9 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:light/light.dart';
-
-// Import kedua pondasi yang sudah kita pastikan kokoh tadi
-import '../../core/utils/storage_util.dart'; // Sesuaikan path jika berbeda
-import '../../data/locals/hive_provider.dart'; // Sesuaikan path jika berbeda
+import '../../core/utils/storage_util.dart';
+import '../../data/locals/hive_provider.dart';
 
 class GameController extends GetxController {
   var score = 0.obs;
@@ -12,41 +11,46 @@ class GameController extends GetxController {
   var hearts = 3.obs;
   var isGameOver = false.obs;
 
+  // Streak & Multiplier
+  var streak = 0.obs;
+  var multiplier = 1.obs;
+
   var luxValue = 0.obs;
   late Light _light;
   StreamSubscription? _subscription;
 
-  // Variabel untuk menyimpan email pemain yang sedang aktif
+  // Email pemain yang sedang aktif
   String? currentUserEmail;
+
+  // Callback untuk reset Flame game (dipasang oleh GameView)
+  VoidCallback? _onResetFlameGame;
+
+  void attachFlameGameReset(VoidCallback callback) {
+    _onResetFlameGame = callback;
+  }
 
   @override
   void onInit() {
     super.onInit();
-    startListening();
-
-    // Panggil fungsi untuk mengambil identitas dan skor saat game pertama kali dibuka
+    _startLightSensor();
     _loadUserAndHighScore();
   }
 
-  // Fungsi baru untuk mengambil data dari core dan data layer
   Future<void> _loadUserAndHighScore() async {
-    // 1. Tanya ke StorageUtil: "Siapa yang sedang main sekarang?"
     currentUserEmail = await StorageUtil.getLoggedInEmail();
-
-    // 2. Jika ada yang login, minta brankas skornya ke HiveProvider
     if (currentUserEmail != null) {
       highScore.value = HiveProvider.getHighScore(currentUserEmail!);
     }
   }
 
-  void startListening() {
+  void _startLightSensor() {
     _light = Light();
     try {
       _subscription = _light.lightSensorStream.listen((lux) {
         luxValue.value = lux;
       });
     } catch (e) {
-      print("Sensor cahaya tidak ditemukan pada perangkat ini");
+      // Sensor cahaya tidak tersedia di perangkat ini
     }
   }
 
@@ -56,35 +60,49 @@ class GameController extends GetxController {
     return (50 - luxValue.value) / 100;
   }
 
+  // Dipanggil saat makanan berhasil ditangkap
   void increaseScore() {
-    if (!isGameOver.value) {
-      score.value += 10;
+    if (isGameOver.value) return;
 
-      // Jika pemain memecahkan rekornya sendiri...
-      if (score.value > highScore.value) {
-        highScore.value = score.value; // Update UI di layar seketika
+    streak.value++;
+    // Multiplier naik di streak 3 dan 5
+    if (streak.value >= 5) {
+      multiplier.value = 3;
+    } else if (streak.value >= 3) {
+      multiplier.value = 2;
+    }
 
-        // 3. Simpan rekor baru ke HiveProvider agar permanen!
-        if (currentUserEmail != null) {
-          HiveProvider.saveHighScore(currentUserEmail!, score.value);
-        }
+    score.value += 10 * multiplier.value;
+
+    if (score.value > highScore.value) {
+      highScore.value = score.value;
+      if (currentUserEmail != null) {
+        HiveProvider.saveHighScore(currentUserEmail!, score.value);
       }
     }
   }
 
+  // Dipanggil saat makanan terlewat (melewati layar tanpa ditangkap)
+  void onFoodMissed() {
+    if (isGameOver.value) return;
+    streak.value = 0;
+    multiplier.value = 1;
+  }
+
   void decreaseHeart() {
-    if (!isGameOver.value && hearts.value > 0) {
-      hearts.value--;
-      if (hearts.value == 0) {
-        isGameOver.value = true;
-      }
-    }
+    if (isGameOver.value || hearts.value <= 0) return;
+    hearts.value--;
+    if (hearts.value == 0) isGameOver.value = true;
   }
 
   void resetGame() {
     score.value = 0;
     hearts.value = 3;
+    streak.value = 0;
+    multiplier.value = 1;
     isGameOver.value = false;
+    // Reset semua komponen di Flame game
+    _onResetFlameGame?.call();
   }
 
   @override

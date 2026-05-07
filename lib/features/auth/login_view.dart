@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/snackbar_helper.dart';
 import 'widgets/custom_textfield.dart';
 import 'auth_controller.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -11,7 +12,6 @@ class LoginView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // menghubungkan ke authcontroller
     final AuthController authC = Get.find<AuthController>();
 
     final TextEditingController emailController = TextEditingController();
@@ -25,8 +25,6 @@ class LoginView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // const SizedBox(height: 40),
-              // logo aquasmart
               SvgPicture.asset('assets/images/aquasmart_logo.svg', height: 140),
               // const SizedBox(height: 24),
               Text(
@@ -46,15 +44,12 @@ class LoginView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
-
-              // form input
+              // Input email & password
               CustomTextField(
                 controller: emailController,
                 hintText: 'Email address',
                 prefixIcon: Icons.email_outlined,
               ),
-
-              // input password
               Obx(
                 () => CustomTextField(
                   controller: passwordController,
@@ -66,8 +61,7 @@ class LoginView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-
-              // sign in button
+              // Tombol Sign In
               Obx(
                 () => SizedBox(
                   width: double.infinity,
@@ -83,11 +77,9 @@ class LoginView extends StatelessWidget {
                             if (success) {
                               Get.offAllNamed('/dashboard');
                             } else {
-                              Get.snackbar(
+                              SnackbarHelper.showError(
                                 'Login Gagal',
                                 authC.errorMessage.value,
-                                backgroundColor: Colors.redAccent,
-                                colorText: Colors.white,
                               );
                             }
                           },
@@ -132,7 +124,7 @@ class LoginView extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // biometric button
+              // Tombol biometrik
               Container(
                 height: 64,
                 width: 64,
@@ -147,22 +139,13 @@ class LoginView extends StatelessWidget {
                     size: 32,
                   ),
                   onPressed: () async {
-                    // 1. Panggil fungsi biometrik saat tombol sidik jari ditekan
                     bool success = await authC.loginWithBiometric();
-
-                    // 2. Jika sidik jari cocok, langsung lempar ke Dashboard
                     if (success) {
                       Get.offAllNamed('/dashboard');
-                    }
-                    // 3. Jika gagal/dibatalkan, munculkan pesan error
-                    else if (authC.errorMessage.value.isNotEmpty) {
-                      Get.snackbar(
+                    } else if (authC.errorMessage.value.isNotEmpty) {
+                      SnackbarHelper.showError(
                         'Biometrik Gagal',
                         authC.errorMessage.value,
-                        backgroundColor: Colors.redAccent,
-                        colorText: Colors.white,
-                        snackPosition: SnackPosition.BOTTOM,
-                        margin: const EdgeInsets.all(24),
                       );
                     }
                   },

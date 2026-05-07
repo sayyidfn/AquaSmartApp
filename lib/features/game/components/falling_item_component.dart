@@ -1,14 +1,13 @@
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import '../aqua_catch_game.dart';
-import 'package:flame/collisions.dart';
 
-// 1. Enum untuk membedakan jenis barang (Makanan vs Sampah)
 enum ItemType { food, trashCan }
 
 class FallingItemComponent extends SpriteComponent
     with HasGameReference<AquaCatchGame> {
   final ItemType itemType;
-  final double speed; // Kecepatan jatuh (berbeda-beda tiap barang agar seru)
+  final double speed;
 
   FallingItemComponent({required this.itemType, required this.speed});
 
@@ -16,9 +15,8 @@ class FallingItemComponent extends SpriteComponent
   Future<void> onLoad() async {
     await super.onLoad();
 
-    // 2. Menentukan gambar dan ukuran berdasarkan ItemType
     String spriteName;
-    double itemSize = 40.0; // Ukuran default
+    double itemSize = 40.0;
 
     switch (itemType) {
       case ItemType.food:
@@ -38,18 +36,17 @@ class FallingItemComponent extends SpriteComponent
     add(RectangleHitbox());
   }
 
-  // 3. JANTUNG GRAVITASI (Dijalankan 60x per detik)
   @override
   void update(double dt) {
     super.update(dt);
 
-    // Posisi Y bertambah artinya benda turun ke bawah layar
-    // dt (delta time) memastikan kecepatan jatuhnya mulus dan stabil
     position.y += speed * dt;
 
-    // 4. OPTIMALISASI MEMORI (SANGAT KRUSIAL!)
-    // Jika barang sudah melewati batas bawah layar, hancurkan dari memori
+    // Makanan yang terlewat akan mereset streak dan multiplier pemain
     if (position.y > game.size.y + size.y) {
+      if (itemType == ItemType.food) {
+        game.gameController.onFoodMissed();
+      }
       removeFromParent();
     }
   }

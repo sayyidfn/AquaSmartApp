@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/species_model.dart';
 import 'encyclopedia_controller.dart';
-// Import bottom sheets (Kita akan buat filenya di langkah selanjutnya)
 import 'widgets/species_detail_sheet.dart';
 import 'widgets/ai_assistant_sheet.dart';
 
@@ -13,8 +12,7 @@ class EncyclopediaView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Memanggil Controller yang sudah terkoneksi dengan API
-    final EncyclopediaController controller = Get.put(EncyclopediaController());
+    final EncyclopediaController controller = Get.find<EncyclopediaController>();
 
     return SafeArea(
       child: Stack(
@@ -283,7 +281,7 @@ class _SpeciesCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Badge level
+                // Badge status konservasi
                 Positioned(
                   top: 12,
                   left: 12,

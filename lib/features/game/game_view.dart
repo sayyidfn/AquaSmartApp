@@ -6,35 +6,48 @@ import '../../core/theme/app_colors.dart';
 import 'game_controller.dart';
 import 'aqua_catch_game.dart';
 
-class GameView extends StatelessWidget {
+class GameView extends StatefulWidget {
   const GameView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final GameController controller = Get.put(GameController());
+  State<GameView> createState() => _GameViewState();
+}
 
+class _GameViewState extends State<GameView> {
+  late final GameController _controller;
+  late final AquaCatchGame _game;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.find<GameController>();
+    _game = AquaCatchGame(_controller);
+    // Pasang callback reset Flame ke controller
+    _controller.attachFlameGameReset(_game.resetAll);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.pureWhite,
       body: SafeArea(
-        // KITA BUNGKUS DENGAN STACK AGAR BISA MENUMPUK POP-UP DI ATAS GAME
         child: Stack(
           children: [
-            // --- LAYER 1: HUD & GAME FLAME ---
+            // Layer 1: HUD atas + kanvas game
             Column(
               children: [
-                // --- 1. TOP HUD ---
+                // Top HUD: nyawa, skor, tombol keluar
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
-                    vertical: 12,
+                    vertical: 10,
                   ),
-                  color: AppColors
-                      .pureWhite, // Sesuaikan dengan warna background header Anda
+                  color: AppColors.pureWhite,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // KIRI: Deretan Hati (Nyawa)
+                      // Ikon nyawa (hati)
                       Obx(
                         () => Row(
                           children: List.generate(
@@ -44,7 +57,7 @@ class GameView extends StatelessWidget {
                               child: Icon(
                                 Icons.favorite_rounded,
                                 size: 26,
-                                color: index < controller.hearts.value
+                                color: index < _controller.hearts.value
                                     ? AppColors.dangerRed
                                     : Colors.grey.shade300,
                               ),
@@ -53,72 +66,104 @@ class GameView extends StatelessWidget {
                         ),
                       ),
 
-                      // TENGAH: Score & High Score (Horizontal)
-                      Row(
+                      // Skor + Multiplier/Streak badge
+                      Column(
                         mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Current Score
-                          Text(
-                            'SCORE ',
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          Obx(
-                            () => Text(
-                              '${controller.score.value}',
-                              style: GoogleFonts.inter(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.gameScoreText,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'SCORE ',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
                               ),
-                            ),
-                          ), // Gunakan warna biru gelap
-
-                          const SizedBox(
-                            width: 12,
-                          ), // Jarak antara Score dan High Score
-                          // High Score
-                          Text(
-                            'HI: ',
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          Obx(
-                            () => Text(
-                              '${controller.highScore.value}',
-                              style: GoogleFonts.inter(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.gameScoreText,
+                              Obx(
+                                () => Text(
+                                  '${_controller.score.value}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.gameScoreText,
+                                  ),
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'HI: ',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              Obx(
+                                () => Text(
+                                  '${_controller.highScore.value}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.gameScoreText,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                          // Streak + Multiplier badge (Fix #3 Medium)
+                          Obx(() {
+                            final int streak = _controller.streak.value;
+                            final int multi = _controller.multiplier.value;
+                            if (streak == 0) return const SizedBox.shrink();
+                            return AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              margin: const EdgeInsets.only(top: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: multi >= 3
+                                    ? AppColors.dangerRed
+                                    : multi == 2
+                                        ? AppColors.coralOrange
+                                        : AppColors.seaGreen,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                multi > 1
+                                    ? 'x$multi  STREAK $streak'
+                                    : 'STREAK $streak',
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            );
+                          }),
                         ],
                       ),
 
-                      // KANAN: Tombol Exit Bulat
+                      // Tombol keluar
                       Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.grey.shade300,
+                            color: AppColors.tfBorder,
                             width: 1.5,
                           ),
                         ),
                         child: IconButton(
                           iconSize: 20,
-                          constraints:
-                              const BoxConstraints(), // Menghilangkan padding bawaan agar lingkaran rapi
+                          constraints: const BoxConstraints(),
                           padding: const EdgeInsets.all(6),
-                          icon: Icon(
+                          icon: const Icon(
                             Icons.close_rounded,
-                            color: Colors.grey.shade600,
+                            color: AppColors.tfPlaceholder,
                           ),
                           onPressed: () => Get.back(),
                         ),
@@ -126,26 +171,24 @@ class GameView extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Kanvas Game
+
+                // Kanvas game + overlay siang/malam
                 Expanded(
                   child: ClipRRect(
                     child: Stack(
                       children: [
-                        GameWidget(game: AquaCatchGame(controller)),
+                        // Flame game yang sudah stable (dibuat sekali di initState)
+                        GameWidget(game: _game),
 
-                        // --- TAMBAHAN: OVERLAY SIANG/MALAM ---
+                        // Overlay gelap berdasarkan sensor cahaya (lux)
                         Obx(
                           () => IgnorePointer(
-                            // Agar sentuhan tetap tembus ke game
                             child: AnimatedContainer(
-                              duration: const Duration(
-                                seconds: 2,
-                              ), // Transisi halus 2 detik
+                              duration: const Duration(seconds: 2),
                               width: double.infinity,
                               height: double.infinity,
-                              // Warna hitam dengan opacity yang diatur oleh lux sensor
                               color: Colors.black.withValues(
-                                alpha: controller.nightOverlayOpacity,
+                                alpha: _controller.nightOverlayOpacity,
                               ),
                             ),
                           ),
@@ -157,94 +200,127 @@ class GameView extends StatelessWidget {
               ],
             ),
 
-            // --- LAYER 2: OVERLAY GAME OVER (Ide Anda) ---
+            // Layer 2: Overlay game over
             Obx(() {
-              // Hanya muncul jika isGameOver = true
-              if (controller.isGameOver.value) {
-                return Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  color: Colors.black.withValues(
-                    alpha: 0.7,
-                  ), // Latar belakang gelap
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        color: AppColors.pureWhite,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
+              if (!_controller.isGameOver.value) return const SizedBox.shrink();
+
+              return Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: Colors.black.withValues(alpha: 0.7),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      color: AppColors.pureWhite,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'GAME OVER',
+                          style: GoogleFonts.inter(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.dangerRed,
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'GAME OVER',
-                            style: GoogleFonts.inter(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.dangerRed,
-                            ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Final Score',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            color: AppColors.tfPlaceholder,
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Final Score',
+                        ),
+                        Text(
+                          '${_controller.score.value}',
+                          style: GoogleFonts.inter(
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Obx(
+                          () => Text(
+                            'Best: ${_controller.highScore.value}',
                             style: GoogleFonts.inter(
-                              fontSize: 16,
+                              fontSize: 14,
                               color: AppColors.tfPlaceholder,
                             ),
                           ),
-                          Text(
-                            '${controller.score.value}',
-                            style: GoogleFonts.inter(
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
+                        ),
+                        const SizedBox(height: 32),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: () => Get.back(),
+                              icon: const Icon(
+                                Icons.home_rounded,
+                                color: AppColors.primary,
+                              ),
+                              label: Text(
+                                'HOME',
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                side: const BorderSide(
+                                  color: AppColors.tfBorder,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 32),
-
-                          // TOMBOL RESTART
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              controller.resetGame(); // Panggil fungsi reset
-                            },
-                            icon: const Icon(
-                              Icons.refresh_rounded,
-                              color: AppColors.pureWhite,
-                            ),
-                            label: Text(
-                              'PLAY AGAIN',
-                              style: GoogleFonts.inter(
-                                fontWeight: FontWeight.bold,
+                            const SizedBox(width: 12),
+                            ElevatedButton.icon(
+                              onPressed: _controller.resetGame,
+                              icon: const Icon(
+                                Icons.refresh_rounded,
                                 color: AppColors.pureWhite,
                               ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.seaGreen,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
+                              label: Text(
+                                'PLAY AGAIN',
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.pureWhite,
+                                ),
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.seaGreen,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                );
-              }
-              // Jika game masih berjalan, overlay ini hilang (kosong)
-              return const SizedBox.shrink();
+                ),
+              );
             }),
           ],
         ),

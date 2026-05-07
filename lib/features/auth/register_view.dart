@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/snackbar_helper.dart';
 import 'widgets/custom_textfield.dart';
 import 'auth_controller.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -28,7 +29,6 @@ class RegisterView extends StatelessWidget {
           child: Column(
             children: [
               SvgPicture.asset('assets/images/aquasmart_logo.svg', height: 140),
-              // const SizedBox(height: 20),
               Text(
                 'AquaSmart',
                 style: GoogleFonts.inter(
@@ -95,9 +95,9 @@ class RegisterView extends StatelessWidget {
                         : () async {
                             if (passwordController.text !=
                                 confirmPasswordController.text) {
-                              Get.snackbar(
-                                'Error',
-                                'Konfirmasi password tidak cocok',
+                              SnackbarHelper.showError(
+                                'Validasi Gagal',
+                                'Konfirmasi password tidak cocok.',
                               );
                               return;
                             }
@@ -109,12 +109,12 @@ class RegisterView extends StatelessWidget {
                             );
                             if (success) {
                               Get.back();
-                              Get.snackbar(
+                              SnackbarHelper.showSuccess(
                                 'Berhasil',
-                                'Akun berhasil dibuat, silakan login',
+                                'Akun berhasil dibuat, silakan login.',
                               );
                             } else {
-                              Get.snackbar('Gagal', authC.errorMessage.value);
+                              SnackbarHelper.showError('Gagal', authC.errorMessage.value);
                             }
                           },
                     style: ElevatedButton.styleFrom(

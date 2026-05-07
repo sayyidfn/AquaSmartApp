@@ -1,37 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/utils/snackbar_helper.dart';
 import '../../core/utils/storage_util.dart';
 import '../../data/locals/hive_provider.dart';
 
 class ProfileController extends GetxController {
-  // ==========================================
-  // 1. VARIABEL STATE (Disamakan persis dengan ProfileView)
-  // ==========================================
 
   // Data User
   var currentName = 'Loading...'.obs;
   var currentNim = '...'.obs;
   String? currentUserEmail;
 
-  // Foto Profil
+  // Foto profil
   var currentProfileImagePath = ''.obs;
   final ImagePicker _picker = ImagePicker();
 
   // Testimoni
   var isEditingTestimonial = false.obs;
+  var testimonialText = ''.obs;
   final TextEditingController testimonialController = TextEditingController();
 
   // Biometrik
   var isBiometricEnabled = false.obs;
   final LocalAuthentication auth = LocalAuthentication();
 
-  // ==========================================
-  // 2. INISIALISASI AWAL (Load Data)
-  // ==========================================
   @override
   void onInit() {
     super.onInit();
@@ -41,92 +39,168 @@ class ProfileController extends GetxController {
   Future<void> _loadUserData() async {
     currentUserEmail = await StorageUtil.getLoggedInEmail();
 
-    // Ambil Nama dan NIM dari SharedPreferences (karena disave saat login)
     final prefs = await SharedPreferences.getInstance();
-    currentName.value =
-        prefs.getString(StorageUtil.keyUserName) ?? 'User Unknown';
+    currentName.value = prefs.getString(StorageUtil.keyUserName) ?? 'User Unknown';
     currentNim.value = prefs.getString(StorageUtil.keyUserNim) ?? '000000';
 
     if (currentUserEmail != null) {
-      // Load semua data dari brankas Hive sesuai email
-      isBiometricEnabled.value = HiveProvider.getBiometricStatus(
-        currentUserEmail!,
-      );
-      currentProfileImagePath.value = HiveProvider.getProfileImagePath(
-        currentUserEmail!,
-      );
-      testimonialController.text = HiveProvider.getTestimonialContent(
-        currentUserEmail!,
-      );
+      isBiometricEnabled.value = HiveProvider.getBiometricStatus(currentUserEmail!);
+      currentProfileImagePath.value = HiveProvider.getProfileImagePath(currentUserEmail!);
+      testimonialController.text = HiveProvider.getTestimonialContent(currentUserEmail!);
+      testimonialText.value = testimonialController.text;
     }
+
+    // Sync RxString setiap kali teks berubah
+    testimonialController.addListener(() {
+      testimonialText.value = testimonialController.text;
+    });
   }
 
-  // ==========================================
-  // 3. FUNGSI FOTO PROFIL (ANTI-LAG)
-  // ==========================================
+  // Ambil foto profil dari galeri
   Future<void> pickProfileImage() async {
     if (currentUserEmail == null) {
-      Get.snackbar('Error', 'Sesi tidak valid.');
+      SnackbarHelper.showError('Error', 'Sesi tidak valid.');
       return;
     }
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 50, // Kompresi agar tidak lag
+        imageQuality: 50,
         maxWidth: 800,
       );
-
       if (image != null) {
-        currentProfileImagePath.value = image.path; // Update UI
-        HiveProvider.saveProfileImagePath(
-          currentUserEmail!,
-          image.path,
-        ); // Simpan permanen
+        currentProfileImagePath.value = image.path;
+        HiveProvider.saveProfileImagePath(currentUserEmail!, image.path);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Gagal memuat gambar galeri.');
+      SnackbarHelper.showError('Error', 'Gagal memuat gambar galeri.');
     }
   }
 
-  // ==========================================
-  // 4. FUNGSI TESTIMONI
-  // ==========================================
+  // Simpan atau batalkan edit testimoni
   void toggleEditTestimonial() {
-    // Balikkan status (dari baca ke edit, atau edit ke baca)
     isEditingTestimonial.value = !isEditingTestimonial.value;
 
-    // Jika user selesai mengedit (menekan tombol centang)
     if (!isEditingTestimonial.value && currentUserEmail != null) {
-      // Simpan teks testimoni ke brankas Hive (default bintang 5 untuk saat ini)
-      HiveProvider.saveTestimonial(
-        currentUserEmail!,
-        testimonialController.text,
-        5,
-      );
-      Get.snackbar(
-        'Berhasil',
-        'Testimoni Anda telah disimpan!',
-        backgroundColor: Colors.green.withValues(alpha: 0.8),
-        colorText: Colors.white,
-      );
+      HiveProvider.saveTestimonial(currentUserEmail!, testimonialController.text, 5);
+      SnackbarHelper.showSuccess('Berhasil', 'Testimoni Anda telah disimpan!');
     }
   }
 
-  // ==========================================
-  // 5. FUNGSI BIOMETRIK
-  // ==========================================
+  // Fix #8: Hapus testimoni — dialog konfirmasi bertema AppColors
+  void deleteTestimonial() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: AppColors.pureWhite,
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.dangerRed.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppColors.dangerRed,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Hapus Testimoni?',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Testimoni yang sudah dihapus tidak dapat dikembalikan.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: AppColors.tfPlaceholder,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: const BorderSide(color: AppColors.tfBorder),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Batal',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        testimonialController.clear();
+                        testimonialText.value = '';
+                        if (currentUserEmail != null) {
+                          HiveProvider.saveTestimonial(currentUserEmail!, '', 0);
+                        }
+                        isEditingTestimonial.value = false;
+                        Get.back();
+                        SnackbarHelper.showSuccess('Berhasil', 'Testimoni berhasil dihapus.');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.dangerRed,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Hapus',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Aktifkan atau nonaktifkan login biometrik
   Future<void> toggleBiometric(bool value) async {
     if (currentUserEmail == null) return;
 
-    if (value == true) {
+    if (value) {
       try {
-        bool canCheck = await auth.canCheckBiometrics;
-        bool isSupported = await auth.isDeviceSupported();
+        final canCheck = await auth.canCheckBiometrics;
+        final isSupported = await auth.isDeviceSupported();
 
         if (canCheck && isSupported) {
-          bool didAuthenticate = await auth.authenticate(
-            localizedReason:
-                'Pindai biometrik Anda untuk mengaktifkan login cepat',
+          final didAuthenticate = await auth.authenticate(
+            localizedReason: 'Pindai biometrik Anda untuk mengaktifkan login cepat',
             biometricOnly: true,
           );
 
@@ -137,7 +211,7 @@ class ProfileController extends GetxController {
             isBiometricEnabled.value = false;
           }
         } else {
-          Get.snackbar('Info', 'Perangkat tidak mendukung biometrik');
+          SnackbarHelper.showInfo('Info', 'Perangkat tidak mendukung biometrik.');
           isBiometricEnabled.value = false;
         }
       } catch (e) {
@@ -149,14 +223,106 @@ class ProfileController extends GetxController {
     }
   }
 
-  // ==========================================
-  // 6. FUNGSI LOGOUT
-  // ==========================================
+  // Fix #5: Logout — dialog konfirmasi bertema AppColors
   Future<void> logout() async {
-    // Bersihkan sesi di StorageUtil
-    await StorageUtil.clearSession();
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: AppColors.pureWhite,
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.dangerRed.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: AppColors.dangerRed,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Keluar dari Akun?',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Anda perlu login kembali setelah keluar.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: AppColors.tfPlaceholder,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: const BorderSide(color: AppColors.tfBorder),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Batal',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Get.back();
+                        await StorageUtil.clearSession();
+                        Get.offAllNamed('/auth');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.dangerRed,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Logout',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-    // Arahkan kembali ke halaman Login (sesuaikan dengan nama rute Anda, misal '/login')
-    Get.offAllNamed('/auth');
+  @override
+  void onClose() {
+    testimonialController.dispose();
+    super.onClose();
   }
 }

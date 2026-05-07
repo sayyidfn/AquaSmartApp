@@ -18,63 +18,105 @@ class AquaCatchGame extends FlameGame with HasCollisionDetection {
   final Random random = Random();
   late Timer spawnTimer;
 
-  // --- VARIABEL SENSOR 1: ACCELEROMETER (Untuk Menyetir Ikan) ---
-  late StreamSubscription<AccelerometerEvent> _accelerometerSubscription;
+  // Accelerometer: menggerakkan ikan kiri/kanan
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
   double tiltX = 0.0;
 
-  // --- VARIABEL SENSOR 2: GYROSCOPE (Untuk Efek 3D Background) ---
-  late StreamSubscription<GyroscopeEvent> _gyroscopeSubscription;
+  // Gyroscope: efek parallax background
+  StreamSubscription<GyroscopeEvent>? _gyroscopeSubscription;
   double bgOffsetX = 0.0;
+
+  // Difficulty scaling
+  double _difficultyTimer = 0.0;
+  double _currentSpawnInterval = 1.2;
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
 
-    // 1. Setup Background (Buat ukurannya sedikit lebih besar dari layar agar bisa digeser)
+    // Background dibuat lebih besar 60px agar bisa digeser untuk efek parallax
     background = SpriteComponent()
       ..sprite = await loadSprite('ocean_bg.png')
-      ..size =
-          Vector2(size.x + 60, size.y + 60) // Lebihkan 60 piksel
+      ..size = Vector2(size.x + 60, size.y + 60)
       ..anchor = Anchor.center
-      ..position = Vector2(size.x / 2, size.y / 2); // Posisikan di tengah
+      ..position = Vector2(size.x / 2, size.y / 2);
     add(background);
 
     player = PlayerComponent();
     add(player);
 
-    spawnTimer = Timer(1.2, onTick: spawnItem, repeat: true);
+    spawnTimer = Timer(_currentSpawnInterval, onTick: spawnItem, repeat: true);
     spawnTimer.start();
 
-    // 2. MENGAKTIFKAN SENSOR 1: ACCELEROMETER (Menyetir Ikan)
-    _accelerometerSubscription = accelerometerEventStream().listen((
-      AccelerometerEvent event,
-    ) {
-      tiltX = event.x;
-    });
+    // Sensor mungkin tidak tersedia di semua perangkat, tangkap error agar tidak crash
+    try {
+      _accelerometerSubscription = accelerometerEventStream().listen(
+        (AccelerometerEvent event) {
+          tiltX = event.x;
+        },
+      );
+    } catch (e) {
+      // Accelerometer tidak tersedia di perangkat ini
+    }
 
-    // 3. MENGAKTIFKAN SENSOR 2: GYROSCOPE (Efek Parallax)
-    _gyroscopeSubscription = gyroscopeEventStream().listen((
-      GyroscopeEvent event,
-    ) {
-      // Gyro event.y membaca putaran pada sumbu vertikal
-      bgOffsetX += event.y * 4.0; // Angka 2.0 adalah sensitivitas putaran
-
-      // Batasi pergeseran agar tidak keluar dari batas gambar (maksimal geser 30 piksel)
-      bgOffsetX = bgOffsetX.clamp(-30.0, 30.0);
-    });
+    try {
+      _gyroscopeSubscription = gyroscopeEventStream().listen(
+        (GyroscopeEvent event) {
+          bgOffsetX = (bgOffsetX + event.y * 4.0).clamp(-30.0, 30.0);
+        },
+      );
+    } catch (e) {
+      // Gyroscope tidak tersedia di perangkat ini
+    }
   }
 
   void spawnItem() {
     if (gameController.isGameOver.value) return;
 
-    final itemTypes = ItemType.values;
-    final randomType = itemTypes[random.nextInt(itemTypes.length)];
+    final int currentScore = gameController.score.value;
+
+    // Kecepatan item meningkat seiring skor untuk menambah tingkat kesulitan
+    final double speedMultiplier = 1.0 + min(currentScore / 300.0, 1.2);
+    final double baseSpeed = 150 + random.nextDouble() * 100;
+    final double randomSpeed = baseSpeed * speedMultiplier;
+
+    // Peluang sampah muncul meningkat seiring skor (maksimal 50%)
+    final double trashChance = min(0.25 + currentScore / 500.0, 0.50);
+    final ItemType randomType = random.nextDouble() < trashChance
+        ? ItemType.trashCan
+        : ItemType.food;
+
     final double randomX = 30 + random.nextDouble() * (size.x - 60);
-    final double randomSpeed = 150 + random.nextDouble() * 200;
 
     final item = FallingItemComponent(itemType: randomType, speed: randomSpeed);
     item.position = Vector2(randomX, -50);
     add(item);
+  }
+
+  // Perbarui interval spawn setiap 10 detik sesuai skor
+  void _updateSpawnRate() {
+    final int score = gameController.score.value;
+    final double newInterval = (1.2 - score / 600.0).clamp(0.5, 1.2);
+
+    if (newInterval != _currentSpawnInterval) {
+      _currentSpawnInterval = newInterval;
+      spawnTimer.stop();
+      spawnTimer = Timer(_currentSpawnInterval, onTick: spawnItem, repeat: true);
+      spawnTimer.start();
+    }
+  }
+
+  // Reset seluruh state game untuk memulai sesi baru
+  void resetAll() {
+    removeWhere((component) => component is FallingItemComponent);
+    bgOffsetX = 0.0;
+    tiltX = 0.0;
+    _difficultyTimer = 0.0;
+    _currentSpawnInterval = 1.2;
+
+    spawnTimer.stop();
+    spawnTimer = Timer(_currentSpawnInterval, onTick: spawnItem, repeat: true);
+    spawnTimer.start();
   }
 
   @override
@@ -83,20 +125,22 @@ class AquaCatchGame extends FlameGame with HasCollisionDetection {
     spawnTimer.update(dt);
 
     if (!gameController.isGameOver.value) {
-      // Update posisi ikan
       player.moveFromTilt(-tiltX, dt);
-
-      // Update posisi background untuk efek 3D secara mulus (Lerp)
-      // Ini akan membuat background bereaksi terhadap pergelangan tangan Anda!
       background.position.x = (size.x / 2) + bgOffsetX;
+
+      // Cek difficulty scaling setiap 10 detik
+      _difficultyTimer += dt;
+      if (_difficultyTimer >= 10.0) {
+        _difficultyTimer = 0.0;
+        _updateSpawnRate();
+      }
     }
   }
 
   @override
   void onRemove() {
-    // SANGAT PENTING: Matikan kedua sensor saat keluar
-    _accelerometerSubscription.cancel();
-    _gyroscopeSubscription.cancel();
+    _accelerometerSubscription?.cancel();
+    _gyroscopeSubscription?.cancel();
     super.onRemove();
   }
 

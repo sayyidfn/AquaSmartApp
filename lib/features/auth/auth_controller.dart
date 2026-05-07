@@ -1,5 +1,5 @@
-import 'package:get/get.dart';
 import 'dart:convert';
+import 'package:get/get.dart';
 import 'package:crypto/crypto.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:local_auth/local_auth.dart';
@@ -24,18 +24,13 @@ class AuthController extends GetxController {
     isConfirmPasswordHidden.value = !isConfirmPasswordHidden.value;
   }
 
-  // ==========================================
-  // FUNGSI RAHASIA: Mengubah Password jadi Hash SHA-256
-  // ==========================================
+  // Hash password dengan SHA-256 sebelum disimpan ke Hive
   String _hashPassword(String password) {
-    var bytes = utf8.encode(password); // Konversi string ke bytes
-    var digest = sha256.convert(bytes); // Lakukan hashing
-    return digest.toString(); // Kembalikan dalam bentuk string acak
+    final bytes = utf8.encode(password);
+    return sha256.convert(bytes).toString();
   }
 
-  // ==========================================
-  // REGISTER
-  // ==========================================
+  // Register akun baru
   Future<bool> register(
     String name,
     String nim,
@@ -47,23 +42,30 @@ class AuthController extends GetxController {
       return false;
     }
 
+    if (!GetUtils.isEmail(email)) {
+      errorMessage.value = 'Format email tidak valid, pastikan mengandung @';
+      return false;
+    }
+
+    if (password.length < 6) {
+      errorMessage.value = 'Password minimal 6 karakter';
+      return false;
+    }
+
     isLoading.value = true;
     try {
-      var box = Hive.box(userBoxName);
+      final box = Hive.box(userBoxName);
 
       if (box.containsKey(email)) {
         errorMessage.value = 'Email sudah terdaftar!';
         return false;
       }
 
-      // ENKRIPSI PASSWORD SEBELUM DISIMPAN!
-      String hashedPassword = _hashPassword(password);
-
       await box.put(email, {
         'name': name,
         'nim': nim,
         'email': email,
-        'password': hashedPassword, // Yang disimpan adalah versi Hash-nya
+        'password': _hashPassword(password),
       });
 
       errorMessage.value = '';
@@ -76,33 +78,31 @@ class AuthController extends GetxController {
     }
   }
 
-  // ==========================================
-  // LOGIN
-  // ==========================================
+  // Login dengan email dan password
   Future<bool> login(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
       errorMessage.value = 'Email dan Password harus diisi!';
       return false;
     }
 
+    if (!GetUtils.isEmail(email)) {
+      errorMessage.value = 'Format email tidak valid, pastikan mengandung @';
+      return false;
+    }
+
     isLoading.value = true;
     try {
-      var box = Hive.box(userBoxName);
-      var userData = box.get(email);
+      final box = Hive.box(userBoxName);
+      final userData = box.get(email);
+      final hashedInput = _hashPassword(password);
 
-      // ENKRIPSI INPUT PASSWORD DARI USER UNTUK DICOCOKKAN DENGAN DATABASE
-      String hashedInputPassword = _hashPassword(password);
-
-      // Cocokkan hash dengan hash
-      if (userData != null && userData['password'] == hashedInputPassword) {
+      if (userData != null && userData['password'] == hashedInput) {
         await StorageUtil.saveLoginSession(
           email,
           userData['nim'],
           userData['name'],
         );
-
         box.put('last_logged_in_email', email);
-
         errorMessage.value = '';
         return true;
       } else {
@@ -118,49 +118,44 @@ class AuthController extends GetxController {
   }
 
   bool isBiometricEnabled() {
-    var box = Hive.box(userBoxName);
+    final box = Hive.box(userBoxName);
     return box.get('use_biometric', defaultValue: false);
   }
 
-  // - Fungsi Login Biometrik -
+  // Login menggunakan sidik jari / biometrik
   Future<bool> loginWithBiometric() async {
     try {
-      var box = Hive.box(userBoxName);
-      String? lastEmail = box.get('last_logged_in_email');
+      final box = Hive.box(userBoxName);
+      final String? lastEmail = box.get('last_logged_in_email');
 
-      // 1. Cek apakah ada histori login
       if (lastEmail == null || lastEmail.isEmpty) {
         errorMessage.value =
             'Data login sebelumnya tidak ditemukan. Silakan login manual dengan email.';
         return false;
       }
 
-      // 2. Cek apakah user ini menyalakan sakelar biometrik di halaman Profil
-      bool isEnabled = HiveProvider.getBiometricStatus(lastEmail);
+      final isEnabled = HiveProvider.getBiometricStatus(lastEmail);
       if (!isEnabled) {
         errorMessage.value =
-            'Fitur biometrik belum diaktifkan untuk akun ini. Silakan login manual dan aktifkan di menu Profil.';
+            'Fitur biometrik belum diaktifkan. Silakan login manual dan aktifkan di menu Profil.';
         return false;
       }
 
-      // 3. Cek dukungan hardware HP
-      bool canCheckBiometrics = await auth.canCheckBiometrics;
-      bool isDeviceSupported = await auth.isDeviceSupported();
+      final canCheck = await auth.canCheckBiometrics;
+      final isSupported = await auth.isDeviceSupported();
 
-      if (!canCheckBiometrics || !isDeviceSupported) {
+      if (!canCheck || !isSupported) {
         errorMessage.value = 'Perangkat Anda tidak mendukung fitur biometrik.';
         return false;
       }
 
-      // 4. Munculkan pop-up sensor sidik jari (Sesuai dengan sintaks tooltip Anda)
-      bool didAuthenticate = await auth.authenticate(
+      final didAuthenticate = await auth.authenticate(
         localizedReason: 'Pindai sidik jari Anda untuk masuk ke AquaSmart',
         biometricOnly: true,
       );
 
-      // 5. Jika sidik jari cocok, langsung buatkan sesi login!
       if (didAuthenticate) {
-        var userData = box.get(lastEmail);
+        final userData = box.get(lastEmail);
         if (userData != null) {
           await StorageUtil.saveLoginSession(
             lastEmail,
@@ -170,7 +165,8 @@ class AuthController extends GetxController {
           return true;
         }
       }
-      return false; // Jika batal memindai
+
+      return false;
     } catch (e) {
       errorMessage.value = 'Sensor dibatalkan atau terjadi kesalahan.';
       return false;

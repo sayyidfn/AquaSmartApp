@@ -10,14 +10,14 @@ class ProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ProfileController controller = Get.put(ProfileController());
+    final ProfileController controller = Get.find<ProfileController>();
 
     return Scaffold(
       backgroundColor: AppColors.pureWhite,
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // - Header -
+            // Header dengan avatar
             Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.center,
@@ -27,68 +27,81 @@ class ProfileView extends StatelessWidget {
                   height: 180,
                   decoration: const BoxDecoration(color: AppColors.primary),
                 ),
-                // Avatar Lingkaran
+                // Fix #6 Low: Avatar + camera badge dalam Stack tersendiri
+                // sehingga posisi badge selalu akurat di pojok kanan bawah avatar
                 Positioned(
                   bottom: -50,
                   child: GestureDetector(
                     onTap: controller.pickProfileImage,
                     child: Obx(
-                      () => Container(
+                      () => SizedBox(
                         width: 110,
                         height: 110,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.pureWhite,
-                            width: 4,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            // Lingkaran foto profil
+                            Container(
+                              width: 110,
+                              height: 110,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppColors.pureWhite,
+                                  width: 4,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                                image: controller
+                                        .currentProfileImagePath
+                                        .value
+                                        .isNotEmpty
+                                    ? DecorationImage(
+                                        image: FileImage(
+                                          File(
+                                            controller
+                                                .currentProfileImagePath.value,
+                                          ),
+                                        ),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
+                              ),
+                              child: controller
+                                      .currentProfileImagePath.value.isEmpty
+                                  ? const Icon(
+                                      Icons.person_outline_rounded,
+                                      size: 50,
+                                      color: AppColors.pureWhite,
+                                    )
+                                  : null,
+                            ),
+                            // Camera badge — posisi fix di pojok kanan bawah
+                            Positioned(
+                              bottom: 2,
+                              right: 2,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.seaGreen,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt_rounded,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
                             ),
                           ],
-                          image:
-                              controller
-                                  .currentProfileImagePath
-                                  .value
-                                  .isNotEmpty
-                              ? DecorationImage(
-                                  image: FileImage(
-                                    File(
-                                      controller.currentProfileImagePath.value,
-                                    ),
-                                  ),
-                                  fit: BoxFit.cover,
-                                )
-                              : null,
                         ),
-                        child: controller.currentProfileImagePath.value.isEmpty
-                            ? const Icon(
-                                Icons.person_outline_rounded,
-                                size: 50,
-                                color: AppColors.pureWhite,
-                              )
-                            : null,
                       ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: -45,
-                  right: MediaQuery.of(context).size.width / 2 - 55,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: AppColors.seaGreen,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt_rounded,
-                      color: Colors.white,
-                      size: 16,
                     ),
                   ),
                 ),
@@ -96,7 +109,7 @@ class ProfileView extends StatelessWidget {
             ),
             const SizedBox(height: 60),
 
-            // --- NAMA DAN NIM DINAMIS MENGGUNAKAN Obx ---
+            // Nama dan NIM dinamis
             Obx(
               () => Text(
                 controller.currentName.value,
@@ -188,9 +201,10 @@ class ProfileView extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
+                  // Kesan & Pesan TPM
                   _buildSectionHeader(
                     Icons.chat_bubble_outline_rounded,
-                    'TPM Course Testimonial',
+                    'Kesan & Pesan TPM',
                     AppColors.dangerRed.withValues(alpha: 0.1),
                     AppColors.dangerRed,
                   ),
@@ -209,37 +223,69 @@ class ProfileView extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'TPM',
+                              'Mata Kuliah TPM',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 color: AppColors.tfPlaceholder,
                               ),
                             ),
-                            GestureDetector(
-                              onTap: controller.toggleEditTestimonial,
-                              child: Obx(
-                                () => Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: AppColors.tfBorder,
+                            // Fix #8 Low: Tombol Edit + Hapus berdampingan
+                            Row(
+                              children: [
+                                // Fix #8 Low: Tombol Hapus — reaktif via testimonialText
+                                Obx(
+                                  () => Visibility(
+                                    visible: controller.testimonialText.value.isNotEmpty ||
+                                        controller.isEditingTestimonial.value,
+                                    child: GestureDetector(
+                                      onTap: controller.deleteTestimonial,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: AppColors.dangerRed
+                                                .withValues(alpha: 0.4),
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.delete_outline_rounded,
+                                          size: 16,
+                                          color: AppColors.dangerRed,
+                                        ),
+                                      ),
                                     ),
-                                    color: controller.isEditingTestimonial.value
-                                        ? AppColors.seaGreen
-                                        : Colors.transparent,
-                                  ),
-                                  child: Icon(
-                                    controller.isEditingTestimonial.value
-                                        ? Icons.check_rounded
-                                        : Icons.edit_outlined,
-                                    size: 16,
-                                    color: controller.isEditingTestimonial.value
-                                        ? Colors.white
-                                        : AppColors.tfPlaceholder,
                                   ),
                                 ),
-                              ),
+                                const SizedBox(width: 8),
+                                // Tombol Edit / Simpan
+                                GestureDetector(
+                                  onTap: controller.toggleEditTestimonial,
+                                  child: Obx(
+                                    () => Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: AppColors.tfBorder,
+                                        ),
+                                        color: controller.isEditingTestimonial.value
+                                            ? AppColors.seaGreen
+                                            : Colors.transparent,
+                                      ),
+                                      child: Icon(
+                                        controller.isEditingTestimonial.value
+                                            ? Icons.check_rounded
+                                            : Icons.edit_outlined,
+                                        size: 16,
+                                        color: controller.isEditingTestimonial.value
+                                            ? Colors.white
+                                            : AppColors.tfPlaceholder,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -264,7 +310,7 @@ class ProfileView extends StatelessWidget {
                                 fontStyle: FontStyle.italic,
                               ),
                               decoration: InputDecoration(
-                                hintText: 'write your testimonial here...',
+                                hintText: 'Tulis kesan & pesanmu di sini...',
                                 hintStyle: GoogleFonts.inter(
                                   color: AppColors.tfPlaceholder,
                                 ),
@@ -330,6 +376,7 @@ class ProfileView extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
 
+                  // Fix #5 Medium: Logout button — lebih subtle, ukuran wajar
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -337,7 +384,7 @@ class ProfileView extends StatelessWidget {
                       icon: const Icon(
                         Icons.logout_rounded,
                         color: AppColors.dangerRed,
-                        size: 28,
+                        size: 22,
                       ),
                       label: Text(
                         'LOGOUT',
@@ -348,7 +395,7 @@ class ProfileView extends StatelessWidget {
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         side: BorderSide(
                           color: AppColors.dangerRed.withValues(alpha: 0.3),
                         ),

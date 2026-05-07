@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../data/providers/api_provider.dart';
+import '../../core/utils/snackbar_helper.dart';
 
 class ToolsController extends GetxController {
+  // Jam zona waktu
   var timeWIB = ''.obs;
   var timeWITA = ''.obs;
   var timeWIT = ''.obs;
@@ -12,10 +14,18 @@ class ToolsController extends GetxController {
 
   Timer? _timer;
 
+  // Kurs mata uang
   var isLoadingCurrency = false.obs;
   var usdToIdr = 0.0.obs;
   var eurToIdr = 0.0.obs;
   var gbpToIdr = 0.0.obs;
+
+  // Konversi mata uang
+  final TextEditingController amountController = TextEditingController();
+  var selectedFrom = 'USD'.obs;
+  var selectedTo = 'IDR'.obs;
+  var conversionResult = '0.00'.obs;
+  final List<String> currencies = ['USD', 'EUR', 'GBP', 'IDR'];
 
   @override
   void onInit() {
@@ -24,111 +34,80 @@ class ToolsController extends GetxController {
     fetchCurrencyRates();
   }
 
-  // - Logika clock -
+  // Mulai timer jam real-time, update tiap 1 detik
   void _startTicking() {
-    _calculateTime(); // Panggil detik pertama
-
-    // refresh tiap 1 detik
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _calculateTime();
-    });
+    _calculateTime();
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _calculateTime(),
+    );
   }
 
   void _calculateTime() {
-    DateTime nowUtc = DateTime.now().toUtc();
-
-    // Format menjadi HH:mm:ss
-    timeWIB.value = DateFormat(
-      'HH:mm:ss',
-    ).format(nowUtc.add(const Duration(hours: 7)));
-    timeWITA.value = DateFormat(
-      'HH:mm:ss',
-    ).format(nowUtc.add(const Duration(hours: 8)));
-    timeWIT.value = DateFormat(
-      'HH:mm:ss',
-    ).format(nowUtc.add(const Duration(hours: 9)));
-    timeLondon.value = DateFormat('HH:mm:ss').format(nowUtc);
+    final nowUtc = DateTime.now().toUtc();
+    final fmt = DateFormat('HH:mm:ss');
+    timeWIB.value = fmt.format(nowUtc.add(const Duration(hours: 7)));
+    timeWITA.value = fmt.format(nowUtc.add(const Duration(hours: 8)));
+    timeWIT.value = fmt.format(nowUtc.add(const Duration(hours: 9)));
+    timeLondon.value = fmt.format(nowUtc);
   }
 
-  // - Fetch data currency -
-  void fetchCurrencyRates() async {
+  // Ambil kurs valuta asing dari API
+  Future<void> fetchCurrencyRates() async {
     isLoadingCurrency.value = true;
-    var data = await ApiProvider.getCurrencyRates();
+    final data = await ApiProvider.getCurrencyRates();
 
     if (data != null) {
-      // Floatrates USD JSON menjadikan IDR dan EUR sebagai key di dalam respons
+      // Base currency adalah USD; EUR dan GBP ke IDR dihitung lewat rasio
       usdToIdr.value = (data['idr']['rate'] ?? 0).toDouble();
-
-      // Karena base-nya USD, untuk dapat EUR ke IDR kita harus membagi rasio IDR dengan EUR
-      double eurRate = (data['eur']['rate'] ?? 1).toDouble();
+      final eurRate = (data['eur']['rate'] ?? 1).toDouble();
+      final gbpRate = (data['gbp']['rate'] ?? 1).toDouble();
       eurToIdr.value = usdToIdr.value / eurRate;
-
-      double gbpRate = (data['gbp']['rate'] ?? 1).toDouble();
       gbpToIdr.value = usdToIdr.value / gbpRate;
     } else {
-      Future.delayed(const Duration(milliseconds: 200), () {
-        Get.snackbar('Error', 'Gagal memuat data kurs terbaru');
-      });
+      Future.delayed(
+        const Duration(milliseconds: 200),
+        () => SnackbarHelper.showError(
+          'Gagal Memuat',
+          'Data kurs terbaru tidak tersedia.',
+        ),
+      );
     }
 
     isLoadingCurrency.value = false;
   }
 
-  // - Logika convert currency -
-  final TextEditingController amountController = TextEditingController();
-  var selectedFrom = 'USD'.obs;
-  var selectedTo = 'IDR'.obs;
-  var conversionResult = '0.00'.obs;
-
-  // Daftar mata uang yang tersedia di dropdown
-  final List<String> currencies = ['USD', 'EUR', 'GBP', 'IDR'];
-
+  // Hitung hasil konversi antar mata uang
   void convertCurrency() {
-    double amount = double.tryParse(amountController.text) ?? 0.0;
-
+    final amount = double.tryParse(amountController.text) ?? 0.0;
     if (amount == 0.0) {
       conversionResult.value = '0.00';
       return;
     }
 
-    // TAHAP A: Konversi mata uang ASAL (From) ke IDR terlebih dahulu
-    double amountInIdr = 0.0;
-    if (selectedFrom.value == 'USD') {
-      amountInIdr = amount * usdToIdr.value;
-    } else if (selectedFrom.value == 'EUR') {
-      amountInIdr = amount * eurToIdr.value;
-    } else if (selectedFrom.value == 'GBP') {
-      amountInIdr = amount * gbpToIdr.value;
-    } else {
-      amountInIdr = amount; // Jika asalnya sudah IDR
-    }
+    // Tahap 1: konversi mata uang asal ke IDR
+    final double amountInIdr = switch (selectedFrom.value) {
+      'USD' => amount * usdToIdr.value,
+      'EUR' => amount * eurToIdr.value,
+      'GBP' => amount * gbpToIdr.value,
+      _ => amount,
+    };
 
-    // TAHAP B: Konversi dari IDR ke mata uang TUJUAN (To)
-    double result = 0.0;
-    if (selectedTo.value == 'USD') {
-      result = amountInIdr / usdToIdr.value;
-    } else if (selectedTo.value == 'EUR') {
-      result = amountInIdr / eurToIdr.value;
-    } else if (selectedTo.value == 'GBP') {
-      result = amountInIdr / gbpToIdr.value;
-    } else {
-      result = amountInIdr; // Jika tujuannya IDR
-    }
+    // Tahap 2: konversi dari IDR ke mata uang tujuan
+    final double result = switch (selectedTo.value) {
+      'USD' => amountInIdr / usdToIdr.value,
+      'EUR' => amountInIdr / eurToIdr.value,
+      'GBP' => amountInIdr / gbpToIdr.value,
+      _ => amountInIdr,
+    };
 
-    // 5. ATUR SIMBOL MATA UANGNYA
-    String symbol = '';
-    if (selectedTo.value == 'IDR') {
-      symbol = 'Rp ';
-    } else if (selectedTo.value == 'EUR') {
-      symbol = '€';
-    } else if (selectedTo.value == 'GBP') {
-      symbol = '£';
-    } // Simbol Poundsterling
-    else {
-      symbol = '\$';
-    }
+    final symbol = switch (selectedTo.value) {
+      'IDR' => 'Rp ',
+      'EUR' => '€',
+      'GBP' => '£',
+      _ => '\$',
+    };
 
-    // Format hasil akhir
     conversionResult.value = NumberFormat.currency(
       locale: selectedTo.value == 'IDR' ? 'id_ID' : 'en_US',
       symbol: symbol,
@@ -137,14 +116,9 @@ class ToolsController extends GetxController {
   }
 
   @override
-  void dispose() {
-    amountController.dispose();
-    super.dispose();
-  }
-
-  @override
   void onClose() {
     _timer?.cancel();
+    amountController.dispose();
     super.onClose();
   }
 }
