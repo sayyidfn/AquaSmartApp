@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/species_model.dart';
 
@@ -7,6 +8,16 @@ class SpeciesDetailSheet extends StatelessWidget {
   final SpeciesModel species;
 
   const SpeciesDetailSheet({super.key, required this.species});
+
+  // Fungsi untuk membuka Wikipedia
+  Future<void> _launchWiki() async {
+    if (species.wikiUrl.isNotEmpty) {
+      final Uri url = Uri.parse(species.wikiUrl);
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+        debugPrint('Could not launch $url');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,8 +63,7 @@ class SpeciesDetailSheet extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        species
-                            .family,
+                        species.family,
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontStyle: FontStyle.italic,
@@ -93,6 +103,7 @@ class SpeciesDetailSheet extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
+            // KOTAK KLASIFIKASI BIOLOGI (DATA ASLI DARI API)
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -104,7 +115,7 @@ class SpeciesDetailSheet extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Care Requirements',
+                    'Scientific Classification',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -112,13 +123,38 @@ class SpeciesDetailSheet extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _careRow('Difficulty', species.difficulty),
-                  _careRow('Temperature', '24-27°C'),
-                  _careRow('pH Level', '8.0-8.4'),
-                  _careRow('Diet', 'Omnivore'),
+                  _careRow('Status', species.status),
+                  _careRow('Class', species.fishClass),
+                  _careRow('Order', species.fishOrder),
+                  _careRow('Family', species.family),
                 ],
               ),
             ),
+
+            const SizedBox(height: 24),
+
+            // TOMBOL WIKIPEDIA
+            if (species.wikiUrl.isNotEmpty)
+              ElevatedButton.icon(
+                onPressed: _launchWiki,
+                icon: const Icon(Icons.language, color: Colors.white, size: 20),
+                label: Text(
+                  'Read on Wikipedia',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -129,18 +165,21 @@ class SpeciesDetailSheet extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('• ', style: TextStyle(color: AppColors.primary)),
           Text(
             '$label: ',
             style: GoogleFonts.inter(fontSize: 13, color: AppColors.textDark),
           ),
-          Text(
-            value,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textDark,
+          Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textDark,
+              ),
             ),
           ),
         ],

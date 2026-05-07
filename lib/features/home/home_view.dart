@@ -41,7 +41,7 @@ class HomeView extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               child: Container(
                 width: double.infinity,
-                color: AppColors.primary, // deepOceanBlue = 0xFF0A5C7A
+                color: AppColors.primary,
                 child: Stack(
                   children: [
                     Positioned(
@@ -52,7 +52,7 @@ class HomeView extends StatelessWidget {
                         height: 140,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.cardAccentLight, // 0xFF0D7298
+                          color: AppColors.cardAccentLight,
                         ),
                       ),
                     ),
@@ -64,7 +64,7 @@ class HomeView extends StatelessWidget {
                         height: 110,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.cardAccentDark, // 0xFF085269
+                          color: AppColors.cardAccentDark,
                         ),
                       ),
                     ),
@@ -127,7 +127,7 @@ class HomeView extends StatelessWidget {
                     title: 'pH',
                     value: '7.0',
                     icon: Icons.water_drop_outlined,
-                    bgColor: AppColors.seaGreen, // 0xFF2DD4A8
+                    bgColor: AppColors.seaGreen, 
                     textColor: Colors.white,
                   ),
                   const SizedBox(width: 12),
@@ -135,7 +135,7 @@ class HomeView extends StatelessWidget {
                     title: 'NH₃ ppm',
                     value: '0.0',
                     icon: Icons.show_chart_rounded,
-                    bgColor: AppColors.oceanTeal, // 0xFF5A8BA0
+                    bgColor: AppColors.oceanTeal,
                     textColor: Colors.white,
                   ),
                   const SizedBox(width: 12),
@@ -146,7 +146,7 @@ class HomeView extends StatelessWidget {
                         horizontal: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.shakeCardBg, // 0xFFE5E7EB
+                        color: AppColors.shakeCardBg,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Column(
@@ -200,7 +200,7 @@ class HomeView extends StatelessWidget {
                       title: 'Aqua Catch',
                       subtitle: 'Relax & play',
                       iconAsset: 'assets/icons/Icon_game.svg',
-                      iconColor: AppColors.coralOrange, // 0xFFFFA726
+                      iconColor: AppColors.coralOrange,
                       onTap: () => Get.toNamed('/game'),
                     ),
                   ),
@@ -211,7 +211,7 @@ class HomeView extends StatelessWidget {
                       subtitle: 'Find nearby',
                       iconAsset: null,
                       iconData: Icons.location_on_outlined,
-                      iconColor: AppColors.locationRed, // 0xFFEA4335
+                      iconColor: AppColors.locationRed,
                       onTap: () => Get.toNamed('/maps'),
                     ),
                   ),

@@ -40,6 +40,7 @@ class ProfileController extends GetxController {
     _loadUserData();
   }
 
+  // Fungsi untuk load user dari local storage
   Future<void> _loadUserData() async {
     currentUserEmail = await StorageUtil.getLoggedInEmail();
 
@@ -55,7 +56,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  // Ambil foto profil dari galeri
+  // Fungsi untuk ambil foto profil dari galeri
   Future<void> pickProfileImage() async {
     if (currentUserEmail == null) {
       SnackbarHelper.showError('Error', 'Sesi tidak valid.');
@@ -76,7 +77,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  // Simpan atau batalkan edit testimoni
+  // Fungsi untuk toggle edit testimoni
   void toggleEditTestimonial() {
     isEditingTestimonial.value = !isEditingTestimonial.value;
 
@@ -188,7 +189,7 @@ class ProfileController extends GetxController {
     );
   }
 
-  // Aktifkan atau nonaktifkan login biometrik
+  // Fungsi untuk toggle biometrik
   Future<void> toggleBiometric(bool value) async {
     if (currentUserEmail == null) return;
 
@@ -222,7 +223,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  // Logout dengan dialog konfirmasi sebelum keluar dari akun
+  // Fungsi untuk logout dengan dialog konfirmasi
   Future<void> logout() async {
     Get.dialog(
       Dialog(

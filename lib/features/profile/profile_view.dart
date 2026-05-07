@@ -28,8 +28,6 @@ class ProfileView extends StatelessWidget {
                   height: 180,
                   decoration: const BoxDecoration(color: AppColors.primary),
                 ),
-                // Avatar foto profil dengan badge kamera di pojok kanan bawah
-                // sehingga posisi badge selalu akurat di pojok kanan bawah avatar
                 Positioned(
                   bottom: -50,
                   child: GestureDetector(
@@ -88,7 +86,6 @@ class ProfileView extends StatelessWidget {
                                     )
                                   : null,
                             ),
-                            // Camera badge — posisi fix di pojok kanan bawah
                             Positioned(
                               bottom: 2,
                               right: 2,
@@ -115,7 +112,6 @@ class ProfileView extends StatelessWidget {
             ),
             const SizedBox(height: 60),
 
-            // Nama dan NIM dinamis
             Obx(
               () => Text(
                 controller.currentName.value,
@@ -235,10 +231,9 @@ class ProfileView extends StatelessWidget {
                                 color: AppColors.tfPlaceholder,
                               ),
                             ),
-                            // Tombol edit dan hapus testimoni berdampingan
                             Row(
                               children: [
-                                // Tombol hapus — muncul jika ada teks atau sedang edit
+                                // Tombol hapus
                                 Obx(
                                   () => Visibility(
                                     visible:
@@ -268,7 +263,7 @@ class ProfileView extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                // Tombol Edit / Simpan
+                                // Tombol edit / simpan
                                 GestureDetector(
                                   onTap: controller.toggleEditTestimonial,
                                   child: Obx(
@@ -306,6 +301,8 @@ class ProfileView extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 12),
+
+                        // Input testimoni
                         Obx(
                           () => Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -346,7 +343,8 @@ class ProfileView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-
+                  
+                  // Section Settings
                   _buildSectionHeader(
                     Icons.settings_outlined,
                     'App Settings',

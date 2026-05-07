@@ -4,8 +4,7 @@ class HiveProvider {
   static const String userBoxName = 'userBox';
   static const String gameBoxName = 'gameBox';
 
-  // ── User ────────────────────────────────────────────────────────────────────
-
+  // Fungsi simpan data user
   static Future<void> saveUser(String email, Map<String, dynamic> userData) async {
     final box = Hive.box(userBoxName);
     await box.put(email, userData);
@@ -15,8 +14,7 @@ class HiveProvider {
     return Hive.box(userBoxName).get(email);
   }
 
-  // ── High Score ──────────────────────────────────────────────────────────────
-
+  // Fungsi high score game — hanya simpan jika skor baru lebih tinggi
   static void saveHighScore(String email, int score) {
     final box = Hive.box(gameBoxName);
     final key = 'highScore_$email';
@@ -28,8 +26,7 @@ class HiveProvider {
     return Hive.box(gameBoxName).get('highScore_$email', defaultValue: 0);
   }
 
-  // ── Biometrik ───────────────────────────────────────────────────────────────
-
+  // Fungsi status biometrik per user
   static void saveBiometricStatus(String email, bool isEnabled) {
     Hive.box(userBoxName).put('biometric_$email', isEnabled);
   }
@@ -38,8 +35,7 @@ class HiveProvider {
     return Hive.box(userBoxName).get('biometric_$email', defaultValue: false);
   }
 
-  // ── Testimoni ───────────────────────────────────────────────────────────────
-
+  // Fungsi testimoni user
   static void saveTestimonial(String email, String content, int rating) {
     final box = Hive.box(userBoxName);
     box.put('testimonial_content_$email', content);
@@ -50,8 +46,7 @@ class HiveProvider {
     return Hive.box(userBoxName).get('testimonial_content_$email', defaultValue: '');
   }
 
-  // ── Foto Profil ─────────────────────────────────────────────────────────────
-
+  // Fungsi path foto profil user
   static void saveProfileImagePath(String email, String path) {
     Hive.box(userBoxName).put('profile_image_$email', path);
   }

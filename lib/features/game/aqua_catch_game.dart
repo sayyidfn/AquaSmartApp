@@ -57,6 +57,7 @@ class AquaCatchGame extends FlameGame with HasCollisionDetection {
       );
     } catch (e) {
       // Accelerometer tidak tersedia di perangkat ini
+      print('Error: $e');
     }
 
     try {
@@ -67,6 +68,7 @@ class AquaCatchGame extends FlameGame with HasCollisionDetection {
       );
     } catch (e) {
       // Gyroscope tidak tersedia di perangkat ini
+      print('Error: $e');
     }
   }
 
@@ -75,7 +77,7 @@ class AquaCatchGame extends FlameGame with HasCollisionDetection {
 
     final int currentScore = gameController.score.value;
 
-    // Kecepatan item meningkat seiring skor untuk menambah tingkat kesulitan
+    // Kecepatan item meningkat seiring skor untuk menambah tingkat kesulitan (maksimal 2.2x)
     final double speedMultiplier = 1.0 + min(currentScore / 300.0, 1.2);
     final double baseSpeed = 150 + random.nextDouble() * 100;
     final double randomSpeed = baseSpeed * speedMultiplier;
@@ -86,8 +88,10 @@ class AquaCatchGame extends FlameGame with HasCollisionDetection {
         ? ItemType.trashCan
         : ItemType.food;
 
+    // Atur posisi spawn item di antara 30px dari kiri dan 30px dari kanan (agar tidak keluar layar)
     final double randomX = 30 + random.nextDouble() * (size.x - 60);
 
+    // Buat item dan tambahkan ke game
     final item = FallingItemComponent(itemType: randomType, speed: randomSpeed);
     item.position = Vector2(randomX, -50);
     add(item);
@@ -95,9 +99,12 @@ class AquaCatchGame extends FlameGame with HasCollisionDetection {
 
   // Perbarui interval spawn setiap 10 detik sesuai skor
   void _updateSpawnRate() {
+    // Ambil skor saat ini dari GameController
     final int score = gameController.score.value;
+    // Hitung interval spawn baru berdasarkan skor (minimal 0.5 detik)
     final double newInterval = (1.2 - score / 600.0).clamp(0.5, 1.2);
 
+    // Jika interval berubah, update timer
     if (newInterval != _currentSpawnInterval) {
       _currentSpawnInterval = newInterval;
       spawnTimer.stop();

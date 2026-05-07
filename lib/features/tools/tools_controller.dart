@@ -63,6 +63,7 @@ class ToolsController extends GetxController {
     );
   }
 
+  // Fungsi untuk calculate time
   void _calculateTime() {
     final nowUtc = DateTime.now().toUtc();
     final fmt = DateFormat('HH:mm:ss');
@@ -72,7 +73,7 @@ class ToolsController extends GetxController {
     timeLondon.value = fmt.format(nowUtc);
   }
 
-  // Ambil kurs valuta asing dari API
+  // Fungsi untuk fetch currency rates dari API
   Future<void> fetchCurrencyRates() async {
     isLoadingCurrency.value = true;
     final data = await ApiProvider.getCurrencyRates();
@@ -163,7 +164,7 @@ class ToolsController extends GetxController {
     ).format(result);
   }
 
-  // Muat model TFLite ke memori, hanya sekali saat pertama kali dibutuhkan
+  // Fungsi untuk load model TFLite
   Future<bool> _ensureModelLoaded() async {
     if (_isModelLoaded && _interpreter != null) return true;
     try {
@@ -179,7 +180,7 @@ class ToolsController extends GetxController {
     }
   }
 
-  // Pilih gambar dari galeri atau kamera lalu jalankan inferensi
+  // Fungsi untuk pick image and analyze
   Future<void> pickImageAndAnalyze(ImageSource source) async {
     try {
       final XFile? file = await _picker.pickImage(

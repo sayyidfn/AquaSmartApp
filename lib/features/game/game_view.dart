@@ -113,7 +113,7 @@ class _GameViewState extends State<GameView> {
                               ),
                             ],
                           ),
-                          // Streak + Multiplier badge (Fix #3 Medium)
+                          // Badge streak dan multiplier, muncul jika streak > 0
                           Obx(() {
                             final int streak = _controller.streak.value;
                             final int multi = _controller.multiplier.value;

@@ -23,6 +23,7 @@ class MapsController extends GetxController {
     determinePosition();
   }
 
+  // Fungsi untuk menghitung jarak antara dua titik koordinat
   String calculateDistance(double endLat, double endLng) {
     double distanceInMeters = Geolocator.distanceBetween(
       currentLatLng.value.latitude,
@@ -33,6 +34,7 @@ class MapsController extends GetxController {
     return (distanceInMeters / 1000).toStringAsFixed(1);
   }
 
+  // Fungsi untuk membuka navigasi Google Maps
   Future<void> openDirections(double lat, double lng) async {
     final Uri uri = Uri.parse(
       'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving',
@@ -44,6 +46,7 @@ class MapsController extends GetxController {
     }
   }
 
+  // Fungsi untuk menentukan lokasi pengguna
   Future<void> determinePosition() async {
     isLoading.value = true;
     try {
@@ -95,6 +98,7 @@ class MapsController extends GetxController {
     }
   }
 
+  // Fungsi untuk mengambil data toko ikan dari Google Maps API
   Future<void> fetchNearbyPlaces(double lat, double lng) async {
     final url =
         'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
@@ -117,6 +121,7 @@ class MapsController extends GetxController {
         final results = data['results'] as List;
         final Set<Marker> newMarkers = {};
 
+        // Iterasi untuk menambahkan marker
         for (var place in results) {
           final latToko = place['geometry']['location']['lat'];
           final lngToko = place['geometry']['location']['lng'];

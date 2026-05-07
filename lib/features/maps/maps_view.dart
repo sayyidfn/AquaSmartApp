@@ -25,7 +25,7 @@ class MapsView extends StatelessWidget {
               markers: controller.markers.toSet(),
               circles: controller.circles.toSet(),
               myLocationEnabled: true,
-              myLocationButtonEnabled: false, // kita buat tombol custom
+              myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
               onMapCreated: (gController) {
                 controller.mapController = gController;

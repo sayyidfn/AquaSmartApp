@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../theme/app_colors.dart';
 
-/// Utilitas terpusat untuk menampilkan snackbar konsisten di seluruh aplikasi.
-/// Semua snackbar muncul di [SnackPosition.TOP].
 class SnackbarHelper {
   SnackbarHelper._();
 

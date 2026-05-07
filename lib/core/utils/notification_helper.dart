@@ -4,6 +4,7 @@ class NotificationHelper {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  // Inisialisasi plugin notifikasi dengan pengaturan ikon Android
   static Future<void> init() async {
     const AndroidInitializationSettings initSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -14,6 +15,7 @@ class NotificationHelper {
     await _notificationsPlugin.initialize(settings: initSettings);
   }
 
+  // Minta izin notifikasi dari pengguna (wajib di Android 13+)
   static Future<void> requestPermission() async {
     await _notificationsPlugin
         .resolvePlatformSpecificImplementation<
@@ -22,6 +24,7 @@ class NotificationHelper {
         ?.requestNotificationsPermission();
   }
 
+  // Tampilkan notifikasi lokal dengan prioritas tinggi dan getaran
   static Future<void> showNotification({
     required int id,
     required String title,

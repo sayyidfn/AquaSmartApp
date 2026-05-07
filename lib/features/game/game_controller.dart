@@ -36,6 +36,7 @@ class GameController extends GetxController {
     _loadUserAndHighScore();
   }
 
+  // Fungsi ambil data user dari Hive saat login
   Future<void> _loadUserAndHighScore() async {
     currentUserEmail = await StorageUtil.getLoggedInEmail();
     if (currentUserEmail != null) {
@@ -43,6 +44,7 @@ class GameController extends GetxController {
     }
   }
 
+  // Fungsi start sensor cahaya
   void _startLightSensor() {
     _light = Light();
     try {
@@ -51,16 +53,18 @@ class GameController extends GetxController {
       });
     } catch (e) {
       // Sensor cahaya tidak tersedia di perangkat ini
+      print('Error: $e');
     }
   }
 
+  // Fungsi untuk mendapatkan opacity overlay gelap berdasarkan nilai lux
   double get nightOverlayOpacity {
     if (luxValue.value > 50) return 0.0;
     if (luxValue.value <= 5) return 0.6;
     return (50 - luxValue.value) / 100;
   }
 
-  // Dipanggil saat makanan berhasil ditangkap
+  // Fungsi untuk menambah skor
   void increaseScore() {
     if (isGameOver.value) return;
 
@@ -82,13 +86,14 @@ class GameController extends GetxController {
     }
   }
 
-  // Dipanggil saat makanan terlewat (melewati layar tanpa ditangkap)
+  // Fungsi saat makanan terlewat (melewati layar tanpa ditangkap)
   void onFoodMissed() {
     if (isGameOver.value) return;
     streak.value = 0;
     multiplier.value = 1;
   }
 
+  // Fungsi untuk mengurangi nyawa
   void decreaseHeart() {
     if (isGameOver.value || hearts.value <= 0) return;
     hearts.value--;

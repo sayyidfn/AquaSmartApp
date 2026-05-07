@@ -47,7 +47,7 @@ class CustomTextField extends StatelessWidget {
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
           prefixIcon: Icon(prefixIcon, color: AppColors.tfIcon, size: 16),
-          counterText: '', 
+          counterText: '',
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(

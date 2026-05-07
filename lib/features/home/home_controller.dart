@@ -26,6 +26,7 @@ class HomeController extends GetxController {
     _initShakeSensor();
   }
 
+  // Ambil nama depan user dari SharedPreferences untuk ditampilkan di header
   Future<void> loadUserName() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -38,6 +39,7 @@ class HomeController extends GetxController {
     }
   }
 
+  // Ambil data suhu air dari API cuaca dan tampilkan notifikasi sesuai kondisi
   Future<void> fetchWeatherData() async {
     isLoading.value = true;
     errorMessage.value = '';
@@ -109,6 +111,7 @@ class HomeController extends GetxController {
       );
     } catch (e) {
       // Sensor tidak tersedia di emulator/perangkat tanpa akselerometer
+      print('Error: $e');
     }
   }
 

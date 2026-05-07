@@ -228,7 +228,7 @@ class _SpeciesCard extends StatelessWidget {
   const _SpeciesCard({required this.species, required this.controller});
 
   Color get _levelColor {
-    switch (species.difficulty) {
+    switch (species.status) {
       case 'Endangered':
       case 'Critically Endangered':
         return AppColors.dangerRed;
@@ -296,7 +296,7 @@ class _SpeciesCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      species.difficulty.toUpperCase(),
+                      species.status.toUpperCase(),
                       style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -306,34 +306,6 @@ class _SpeciesCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Positioned(
-                //   top: 10,
-                //   right: 10,
-                //   child: GestureDetector(
-                //     onTap: () => controller.toggleBookmark(species.id),
-                //     child: Container(
-                //       padding: const EdgeInsets.all(8),
-                //       decoration: BoxDecoration(
-                //         color: AppColors.primary.withValues(alpha: 0.85),
-                //         shape: BoxShape.circle,
-                //       ),
-                //       child: Obx(() {
-                //         var currentSpecies = controller.filteredList.firstWhere(
-                //           (s) => s.id == species.id,
-                //         );
-                //         return Icon(
-                //           currentSpecies.isBookmarked
-                //               ? Icons.favorite_rounded
-                //               : Icons.favorite_border_rounded,
-                //           color: currentSpecies.isBookmarked
-                //               ? AppColors.dangerRed
-                //               : AppColors.pureWhite,
-                //           size: 18,
-                //         );
-                //       }),
-                //     ),
-                //   ),
-                // ),
               ],
             ),
             Padding(
