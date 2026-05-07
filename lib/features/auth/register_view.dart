@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
@@ -50,16 +51,21 @@ class RegisterView extends StatelessWidget {
                 controller: nameController,
                 hintText: 'Full name',
                 prefixIcon: Icons.person_outline,
+                maxLength: 100,
               ),
               CustomTextField(
                 controller: nimController,
                 hintText: 'Nim',
                 prefixIcon: Icons.badge_outlined,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                maxLength: 15,
               ),
               CustomTextField(
                 controller: emailController,
                 hintText: 'Email address',
                 prefixIcon: Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
               ),
               Obx(
                 () => CustomTextField(

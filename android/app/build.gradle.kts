@@ -49,6 +49,10 @@ android {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
         }
     }
+    aaptOptions {
+        noCompress("tflite")
+        noCompress("lite")
+    }
 }
 
 flutter {

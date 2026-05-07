@@ -33,6 +33,10 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Pasang listener sekali di sini, bukan di dalam _loadUserData
+    testimonialController.addListener(() {
+      testimonialText.value = testimonialController.text;
+    });
     _loadUserData();
   }
 
@@ -49,11 +53,6 @@ class ProfileController extends GetxController {
       testimonialController.text = HiveProvider.getTestimonialContent(currentUserEmail!);
       testimonialText.value = testimonialController.text;
     }
-
-    // Sync RxString setiap kali teks berubah
-    testimonialController.addListener(() {
-      testimonialText.value = testimonialController.text;
-    });
   }
 
   // Ambil foto profil dari galeri
@@ -87,7 +86,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  // Fix #8: Hapus testimoni — dialog konfirmasi bertema AppColors
+  // Hapus testimoni dengan dialog konfirmasi sebelum menghapus
   void deleteTestimonial() {
     Get.dialog(
       Dialog(
@@ -223,7 +222,7 @@ class ProfileController extends GetxController {
     }
   }
 
-  // Fix #5: Logout — dialog konfirmasi bertema AppColors
+  // Logout dengan dialog konfirmasi sebelum keluar dari akun
   Future<void> logout() async {
     Get.dialog(
       Dialog(

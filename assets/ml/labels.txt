@@ -1,0 +1,3 @@
+0 Sehat
+1 Bercak Merah
+2 Jamur

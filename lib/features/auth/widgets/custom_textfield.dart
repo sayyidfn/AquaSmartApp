@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -9,6 +10,9 @@ class CustomTextField extends StatelessWidget {
   final TextEditingController? controller;
   final VoidCallback? onTogglePassword;
   final bool obscureText;
+  final TextInputType keyboardType;
+  final int? maxLength;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CustomTextField({
     super.key,
@@ -18,6 +22,9 @@ class CustomTextField extends StatelessWidget {
     this.controller,
     this.onTogglePassword,
     this.obscureText = false,
+    this.keyboardType = TextInputType.text,
+    this.maxLength,
+    this.inputFormatters,
   });
 
   @override
@@ -32,11 +39,15 @@ class CustomTextField extends StatelessWidget {
       child: TextField(
         controller: controller,
         obscureText: obscureText,
+        keyboardType: keyboardType,
+        maxLength: maxLength,
+        inputFormatters: inputFormatters,
         style: GoogleFonts.inter(color: AppColors.textDark, fontSize: 14),
         decoration: InputDecoration(
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
           prefixIcon: Icon(prefixIcon, color: AppColors.tfIcon, size: 16),
+          counterText: '', 
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(

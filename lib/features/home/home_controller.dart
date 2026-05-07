@@ -48,26 +48,30 @@ class HomeController extends GetxController {
     final data = await ApiProvider.getWeather(lat, lng);
 
     if (data != null && data['current_weather'] != null) {
-      final double temp = (data['current_weather']['temperature'] as num).toDouble();
+      final double temp = (data['current_weather']['temperature'] as num)
+          .toDouble();
       waterTemperature.value = temp;
 
       if (temp > 27.0) {
         NotificationHelper.showNotification(
           id: 1,
           title: '🚨 Peringatan Suhu Panas!',
-          body: 'Suhu air mencapai $temp°C. Segera nyalakan pendingin atau periksa sirkulasi air akuarium Anda.',
+          body:
+              'Suhu air mencapai $temp°C. Segera nyalakan pendingin atau periksa sirkulasi air akuarium Anda.',
         );
       } else if (temp < 26.0) {
         NotificationHelper.showNotification(
           id: 2,
           title: '❄️ Peringatan Suhu Dingin!',
-          body: 'Suhu air turun ke $temp°C. Ikan tropis Anda butuh kehangatan, nyalakan Heater sekarang.',
+          body:
+              'Suhu air turun ke $temp°C. Ikan tropis Anda butuh kehangatan, nyalakan Heater sekarang.',
         );
       } else {
         NotificationHelper.showNotification(
           id: 3,
           title: '✅ Akuarium Aman',
-          body: 'Suhu air stabil di $temp°C. Kondisi ideal untuk ikan kesayangan Anda.',
+          body:
+              'Suhu air stabil di $temp°C. Kondisi ideal untuk ikan kesayangan Anda.',
         );
       }
     } else {

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
@@ -27,7 +28,7 @@ class ProfileView extends StatelessWidget {
                   height: 180,
                   decoration: const BoxDecoration(color: AppColors.primary),
                 ),
-                // Fix #6 Low: Avatar + camera badge dalam Stack tersendiri
+                // Avatar foto profil dengan badge kamera di pojok kanan bawah
                 // sehingga posisi badge selalu akurat di pojok kanan bawah avatar
                 Positioned(
                   bottom: -50,
@@ -58,7 +59,8 @@ class ProfileView extends StatelessWidget {
                                     offset: const Offset(0, 4),
                                   ),
                                 ],
-                                image: controller
+                                image:
+                                    controller
                                         .currentProfileImagePath
                                         .value
                                         .isNotEmpty
@@ -66,15 +68,19 @@ class ProfileView extends StatelessWidget {
                                         image: FileImage(
                                           File(
                                             controller
-                                                .currentProfileImagePath.value,
+                                                .currentProfileImagePath
+                                                .value,
                                           ),
                                         ),
                                         fit: BoxFit.cover,
                                       )
                                     : null,
                               ),
-                              child: controller
-                                      .currentProfileImagePath.value.isEmpty
+                              child:
+                                  controller
+                                      .currentProfileImagePath
+                                      .value
+                                      .isEmpty
                                   ? const Icon(
                                       Icons.person_outline_rounded,
                                       size: 50,
@@ -229,13 +235,17 @@ class ProfileView extends StatelessWidget {
                                 color: AppColors.tfPlaceholder,
                               ),
                             ),
-                            // Fix #8 Low: Tombol Edit + Hapus berdampingan
+                            // Tombol edit dan hapus testimoni berdampingan
                             Row(
                               children: [
-                                // Fix #8 Low: Tombol Hapus — reaktif via testimonialText
+                                // Tombol hapus — muncul jika ada teks atau sedang edit
                                 Obx(
                                   () => Visibility(
-                                    visible: controller.testimonialText.value.isNotEmpty ||
+                                    visible:
+                                        controller
+                                            .testimonialText
+                                            .value
+                                            .isNotEmpty ||
                                         controller.isEditingTestimonial.value,
                                     child: GestureDetector(
                                       onTap: controller.deleteTestimonial,
@@ -269,7 +279,10 @@ class ProfileView extends StatelessWidget {
                                         border: Border.all(
                                           color: AppColors.tfBorder,
                                         ),
-                                        color: controller.isEditingTestimonial.value
+                                        color:
+                                            controller
+                                                .isEditingTestimonial
+                                                .value
                                             ? AppColors.seaGreen
                                             : Colors.transparent,
                                       ),
@@ -278,7 +291,10 @@ class ProfileView extends StatelessWidget {
                                             ? Icons.check_rounded
                                             : Icons.edit_outlined,
                                         size: 16,
-                                        color: controller.isEditingTestimonial.value
+                                        color:
+                                            controller
+                                                .isEditingTestimonial
+                                                .value
                                             ? Colors.white
                                             : AppColors.tfPlaceholder,
                                       ),
@@ -304,10 +320,13 @@ class ProfileView extends StatelessWidget {
                               controller: controller.testimonialController,
                               enabled: controller.isEditingTestimonial.value,
                               maxLines: 3,
+                              maxLength: 300,
+                              maxLengthEnforcement:
+                                  MaxLengthEnforcement.enforced,
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 color: AppColors.textDark,
-                                fontStyle: FontStyle.italic,
+                                // fontStyle: FontStyle.italic,
                               ),
                               decoration: InputDecoration(
                                 hintText: 'Tulis kesan & pesanmu di sini...',
@@ -315,6 +334,10 @@ class ProfileView extends StatelessWidget {
                                   color: AppColors.tfPlaceholder,
                                 ),
                                 border: InputBorder.none,
+                                counterStyle: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: AppColors.tfPlaceholder,
+                                ),
                               ),
                             ),
                           ),
@@ -376,7 +399,7 @@ class ProfileView extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
 
-                  // Fix #5 Medium: Logout button — lebih subtle, ukuran wajar
+                  // Tombol logout
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(

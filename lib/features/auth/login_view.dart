@@ -49,6 +49,7 @@ class LoginView extends StatelessWidget {
                 controller: emailController,
                 hintText: 'Email address',
                 prefixIcon: Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
               ),
               Obx(
                 () => CustomTextField(

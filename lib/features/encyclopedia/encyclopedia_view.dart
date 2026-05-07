@@ -12,7 +12,8 @@ class EncyclopediaView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final EncyclopediaController controller = Get.find<EncyclopediaController>();
+    final EncyclopediaController controller =
+        Get.find<EncyclopediaController>();
 
     return SafeArea(
       child: Stack(
@@ -305,34 +306,34 @@ class _SpeciesCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: GestureDetector(
-                    onTap: () => controller.toggleBookmark(species.id),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.85),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Obx(() {
-                        var currentSpecies = controller.filteredList.firstWhere(
-                          (s) => s.id == species.id,
-                        );
-                        return Icon(
-                          currentSpecies.isBookmarked
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                          color: currentSpecies.isBookmarked
-                              ? AppColors.dangerRed
-                              : AppColors.pureWhite,
-                          size: 18,
-                        );
-                      }),
-                    ),
-                  ),
-                ),
+                // Positioned(
+                //   top: 10,
+                //   right: 10,
+                //   child: GestureDetector(
+                //     onTap: () => controller.toggleBookmark(species.id),
+                //     child: Container(
+                //       padding: const EdgeInsets.all(8),
+                //       decoration: BoxDecoration(
+                //         color: AppColors.primary.withValues(alpha: 0.85),
+                //         shape: BoxShape.circle,
+                //       ),
+                //       child: Obx(() {
+                //         var currentSpecies = controller.filteredList.firstWhere(
+                //           (s) => s.id == species.id,
+                //         );
+                //         return Icon(
+                //           currentSpecies.isBookmarked
+                //               ? Icons.favorite_rounded
+                //               : Icons.favorite_border_rounded,
+                //           color: currentSpecies.isBookmarked
+                //               ? AppColors.dangerRed
+                //               : AppColors.pureWhite,
+                //           size: 18,
+                //         );
+                //       }),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
             Padding(

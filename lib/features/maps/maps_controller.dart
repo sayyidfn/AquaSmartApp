@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
@@ -83,8 +82,8 @@ class MapsController extends GetxController {
           circleId: const CircleId('radius_10km'),
           center: currentLatLng.value,
           radius: 10000,
-          fillColor: AppColors.deepOceanBlue.withOpacity(0.08),
-          strokeColor: AppColors.deepOceanBlue.withOpacity(0.4),
+          fillColor: AppColors.deepOceanBlue.withValues(alpha: 0.08),
+          strokeColor: AppColors.deepOceanBlue.withValues(alpha: 0.4),
           strokeWidth: 1,
         ),
       );

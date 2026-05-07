@@ -15,7 +15,7 @@ class MapsView extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // ─── LAYER 1: PETA ───────────────────────────────────────
+          // Layer 1: peta
           Obx(
             () => GoogleMap(
               initialCameraPosition: CameraPosition(
@@ -39,7 +39,7 @@ class MapsView extends StatelessWidget {
             ),
           ),
 
-          // ─── LAYER 2: HEADER MELAYANG ─────────────────────────────
+          // Layer 2: header melayang (judul + info jumlah toko)
           Positioned(
             top: topPadding + 12,
             left: 16,
@@ -107,7 +107,7 @@ class MapsView extends StatelessWidget {
             ),
           ),
 
-          // ─── LAYER 3: TOMBOL MY LOCATION ──────────────────────────
+          // Layer 3: tombol my location (custom)
           Positioned(
             bottom: 300,
             right: 16,
@@ -124,7 +124,7 @@ class MapsView extends StatelessWidget {
             ),
           ),
 
-          // ─── LAYER 4: BOTTOM SHEET DRAGGABLE ─────────────────────
+          // Layer 4: bottom sheet list toko terdekat
           DraggableScrollableSheet(
             initialChildSize: 0.32,
             minChildSize: 0.14,
@@ -300,7 +300,7 @@ class MapsView extends StatelessWidget {
   }
 }
 
-// ─── WIDGET: TOMBOL IKON MELAYANG ─────────────────────────────────────────────
+// Widget: tombol ikon melayang
 class _FloatingIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
@@ -328,7 +328,7 @@ class _FloatingIconButton extends StatelessWidget {
   }
 }
 
-// ─── WIDGET: KARTU TOKO ───────────────────────────────────────────────────────
+// Widget: kartu toko di bottom sheet
 class _StoreCard extends StatelessWidget {
   final String name;
   final String vicinity;
@@ -467,7 +467,7 @@ class _StoreCard extends StatelessWidget {
   }
 }
 
-// ─── WIDGET: BADGE KECIL ──────────────────────────────────────────────────────
+// Widget: badge kecil (jarak & status buka)
 class _Badge extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -480,7 +480,7 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(

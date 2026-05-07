@@ -10,9 +10,19 @@ class AiAssistantController extends GetxController {
 
   // Kirim pesan user ke Gemini AI dan tambahkan respons ke riwayat chat
   Future<void> sendMessage() async {
+    // Guard: cegah pengiriman ganda saat AI sedang memproses
+    if (isLoading.value) return;
+
     final text = chatController.text.trim();
     if (text.isEmpty) return;
 
+    if (text.length > 500) {
+      messages.add({
+        'role': 'ai',
+        'text': 'Pesan terlalu panjang. Maksimal 500 karakter.',
+      });
+      return;
+    }
     messages.add({'role': 'user', 'text': text});
     chatController.clear();
     isLoading.value = true;
