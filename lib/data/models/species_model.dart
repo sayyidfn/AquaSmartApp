@@ -23,10 +23,13 @@ class SpeciesModel {
     required this.fishOrder,
   });
 
+  // Fungsi untuk mengubah json menjadi object
   factory SpeciesModel.fromJson(Map<String, dynamic> jsonItem) {
     String imageUrl = 'https://via.placeholder.com/150';
+    // Ambil gambar dari json
     final imgSrc = jsonItem['img_src_set'];
 
+    // Cek apakah imgSrc adalah map
     if (imgSrc is Map<String, dynamic> && imgSrc.containsKey('1.5x')) {
       imageUrl = imgSrc['1.5x'].toString();
     } else if (imgSrc is String && imgSrc != 'Not available') {
@@ -34,13 +37,16 @@ class SpeciesModel {
     }
     if (imageUrl.startsWith('//')) imageUrl = 'https:$imageUrl';
 
+    // Ambil meta dari json
     final meta = jsonItem['meta'];
     String fishFamily = 'Unknown Family';
     String status = 'Not Evaluated';
     String fClass = 'Unknown';
     String fOrder = 'Unknown';
 
+    // Cek apakah meta adalah map
     if (meta != null && meta is Map<String, dynamic>) {
+      // Ambil scientific classification dari json
       final classification = meta['scientific_classification'];
       if (classification != null) {
         if (classification['family'] != null) {
